@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  parseCondition,
+  wmoToCondition,
   getWeatherIcon,
   formatTemp,
   getConditionLabel,
@@ -14,18 +14,17 @@ import {
 interface HourlyItem {
   dt: number;
   temp: number;
-  dewpoint?: number;
+  feelsLike: number;
+  precipProb: number;
+  precip: number;
+  weatherCode: number;
   windSpeed: number;
   windDeg: number;
-  gust?: number;
-  precip: number;
-  snow?: number;
-  ptype: number;
+  gust: number;
   clouds: number;
   humidity: number;
-  pressure: number;
-  cape?: number;
-  condition: string;
+  uvIndex: number;
+  visibility: number;
 }
 
 interface HourlyForecastProps {
@@ -34,18 +33,21 @@ interface HourlyForecastProps {
 
 export default function HourlyForecast({ list }: HourlyForecastProps) {
   const hourly = list.slice(0, 24).map((item) => {
-    const condition = parseCondition(item.condition);
+    const condition = wmoToCondition(item.weatherCode);
     const isNight = isNightByTime(item.dt);
     const date = new Date(item.dt * 1000);
     return {
-      time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: date.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       temp: Math.round(item.temp),
       icon: getWeatherIcon(condition, isNight),
       condition: getConditionLabel(condition),
+      precipProb: item.precipProb,
       precip: item.precip,
       windSpeed: item.windSpeed,
       windDir: getWindDirection(item.windDeg),
-      clouds: Math.round(item.clouds),
     };
   });
 
@@ -57,7 +59,7 @@ export default function HourlyForecast({ list }: HourlyForecastProps) {
       className="w-full max-w-2xl mx-auto"
     >
       <h3 className="text-sm font-medium text-white/50 mb-3 px-1">
-        HOURLY FORECAST
+        PRAKIRAAN PER JAM
       </h3>
       <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
         <CardContent className="p-4">
@@ -75,13 +77,13 @@ export default function HourlyForecast({ list }: HourlyForecastProps) {
                 <span className="text-sm font-semibold text-white/90">
                   {formatTemp(h.temp)}
                 </span>
-                {h.precip > 0 && (
+                {h.precipProb > 0 && (
                   <span className="text-[10px] text-blue-300 mt-1">
-                    {h.precip.toFixed(1)}mm
+                    {h.precipProb}%
                   </span>
                 )}
                 <span className="text-[10px] text-white/25 mt-0.5">
-                  {h.windSpeed.toFixed(0)}m/s {h.windDir}
+                  {h.windSpeed.toFixed(0)} km/j
                 </span>
               </motion.div>
             ))}

@@ -10,7 +10,9 @@ import {
   Thermometer,
   Cloud,
   CloudRain,
-  Zap,
+  Sunrise,
+  Sunset,
+  Sun,
 } from "lucide-react";
 import {
   formatTemp,
@@ -18,6 +20,7 @@ import {
   getVisibilityLabel,
   getConditionLabel,
   getCloudCoverLabel,
+  getUVLevel,
 } from "@/lib/weather";
 
 interface CurrentWeatherProps {
@@ -26,19 +29,19 @@ interface CurrentWeatherProps {
   feelsLike: number;
   tempMin: number;
   tempMax: number;
-  dewpoint: number;
   humidity: number;
   pressure: number;
   windSpeed: number;
   windDeg: number;
   gust: number;
   precip: number;
-  snow: number;
   clouds: number;
   condition: string;
-  cape: number;
   visibility: number;
   weatherIcon: string;
+  sunrise?: number;
+  sunset?: number;
+  uvIndexMax?: number;
 }
 
 export default function CurrentWeather({
@@ -57,57 +60,70 @@ export default function CurrentWeather({
   condition,
   visibility,
   weatherIcon,
-  dewpoint,
-  cape,
-  snow,
+  sunrise,
+  sunset,
+  uvIndexMax,
 }: CurrentWeatherProps) {
   const conditionLabel = getConditionLabel(condition);
+  const uvInfo = uvIndexMax ? getUVLevel(uvIndexMax) : null;
+
+  const sunriseTime = sunrise
+    ? new Date(sunrise * 1000).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "--:--";
+
+  const sunsetTime = sunset
+    ? new Date(sunset * 1000).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "--:--";
 
   const details = [
     {
       icon: <Wind className="h-4 w-4" />,
-      label: "Wind",
-      value: `${windSpeed.toFixed(1)} m/s ${getWindDirection(windDeg)}`,
-      sub: gust > 0 ? `Gust ${gust.toFixed(1)}` : undefined,
+      label: "Angin",
+      value: `${windSpeed.toFixed(0)} km/j ${getWindDirection(windDeg)}`,
+      sub: gust > 0 ? `Gust ${gust.toFixed(0)}` : undefined,
     },
     {
       icon: <Droplets className="h-4 w-4" />,
-      label: "Humidity",
+      label: "Kelembapan",
       value: `${Math.round(humidity)}%`,
-      sub: `Dewpt ${formatTemp(dewpoint)}`,
     },
     {
       icon: <Eye className="h-4 w-4" />,
-      label: "Visibility",
+      label: "Jarak Pandang",
       value: getVisibilityLabel(visibility),
     },
     {
       icon: <Gauge className="h-4 w-4" />,
-      label: "Pressure",
+      label: "Tekanan",
       value: `${Math.round(pressure)} hPa`,
     },
     {
       icon: <Thermometer className="h-4 w-4" />,
-      label: "Feels Like",
+      label: "Terasa Seperti",
       value: formatTemp(feelsLike),
     },
     {
       icon: <Cloud className="h-4 w-4" />,
-      label: "Clouds",
+      label: "Awan",
       value: `${Math.round(clouds)}%`,
       sub: getCloudCoverLabel(clouds),
     },
     {
       icon: <CloudRain className="h-4 w-4" />,
-      label: "Precipitation",
+      label: "Curah Hujan",
       value: `${precip.toFixed(1)} mm`,
-      sub: snow > 0 ? `Snow: ${snow.toFixed(1)} mm` : undefined,
     },
     {
-      icon: <Zap className="h-4 w-4" />,
-      label: "CAPE",
-      value: `${Math.round(cape)} J/kg`,
-      sub: cape > 1000 ? "Storm potential" : cape > 500 ? "Moderate" : "Low",
+      icon: <Sunrise className="h-4 w-4" />,
+      label: "Matahari",
+      value: `${sunriseTime} / ${sunsetTime}`,
+      sub: uvInfo ? `UV: ${uvInfo.label}` : undefined,
     },
   ];
 
@@ -149,11 +165,11 @@ export default function CurrentWeather({
             {formatTemp(temp)}
           </span>
           <div className="flex items-center justify-center gap-3 mt-2 text-white/50 text-sm">
-            <span>H: {formatTemp(tempMax)}</span>
+            <span>T: {formatTemp(tempMax)}</span>
             <span>&bull;</span>
-            <span>L: {formatTemp(tempMin)}</span>
+            <span>R: {formatTemp(tempMin)}</span>
             <span>&bull;</span>
-            <span>Feels {formatTemp(feelsLike)}</span>
+            <span>Terasa {formatTemp(feelsLike)}</span>
           </div>
         </motion.div>
       </div>

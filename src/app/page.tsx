@@ -6,20 +6,20 @@ import {
   Loader2,
   CloudOff,
   RefreshCw,
-  Wind,
+  CloudSunRain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/weather/SearchBar";
 import CurrentWeather from "@/components/weather/CurrentWeather";
 import HourlyForecast from "@/components/weather/HourlyForecast";
 import DailyForecast from "@/components/weather/DailyForecast";
-import LiveWebcams from "@/components/weather/LiveWebcams";
+import WindyMap from "@/components/weather/WindyMap";
 import WeatherParticles from "@/components/weather/WeatherParticles";
 import {
+  wmoToCondition,
   getWeatherIcon,
   getBackgroundGradient,
   isNightTime,
-  parseCondition,
   type WeatherCondition,
 } from "@/lib/weather";
 
@@ -29,55 +29,47 @@ interface CurrentWeatherData {
   feelsLike: number;
   tempMin: number;
   tempMax: number;
-  dewpoint: number;
   humidity: number;
-  pressure: number;
   windSpeed: number;
   windDeg: number;
   gust: number;
   precip: number;
-  snow: number;
-  ptype: number;
+  weatherCode: number;
   clouds: number;
-  condition: string;
-  cape: number;
+  pressure: number;
+  isDay: boolean;
   visibility: number;
 }
 
 interface HourlyData {
   dt: number;
   temp: number;
-  dewpoint: number;
+  feelsLike: number;
+  precipProb: number;
+  precip: number;
+  weatherCode: number;
   windSpeed: number;
   windDeg: number;
   gust: number;
-  precip: number;
-  snow: number;
-  ptype: number;
   clouds: number;
   humidity: number;
-  pressure: number;
-  cape: number;
-  condition: string;
+  uvIndex: number;
+  visibility: number;
 }
 
 interface DailyData {
   dt: number;
   date: string;
-  tempMin: number;
   tempMax: number;
-  windSpeed: number;
-  windDeg: number;
-  gust: number;
-  precip: number;
-  snow: number;
-  ptype: number;
-  clouds: number;
-  humidity: number;
-  pressure: number;
-  cape: number;
-  condition: string;
-  pop: number;
+  tempMin: number;
+  precipSum: number;
+  precipProb: number;
+  weatherCode: number;
+  windMax: number;
+  gustMax: number;
+  sunrise: number;
+  sunset: number;
+  uvIndexMax: number;
 }
 
 export default function Home() {
@@ -100,15 +92,14 @@ export default function Home() {
         let lat: number, lon: number, cityName: string;
 
         if (typeof cityOrCoords === "string") {
-          // First geocode the city name
           const geoRes = await fetch(
             `/api/geocode?q=${encodeURIComponent(cityOrCoords)}&limit=1`
           );
-          if (!geoRes.ok) throw new Error("City not found");
+          if (!geoRes.ok) throw new Error("Kota tidak ditemukan");
           const geoData = await geoRes.json();
 
           if (!geoData.results || geoData.results.length === 0) {
-            throw new Error("City not found");
+            throw new Error("Kota tidak ditemukan");
           }
 
           const result = geoData.results[0];
@@ -120,7 +111,6 @@ export default function Home() {
           lat = cityOrCoords.lat;
           lon = cityOrCoords.lon;
 
-          // Reverse geocode
           try {
             const geoRes = await fetch(
               `/api/geocode?lat=${lat}&lon=${lon}`
@@ -140,32 +130,25 @@ export default function Home() {
         setLocationName(cityName);
         setCoords({ lat, lon });
 
-        // Fetch weather data and daily forecast in parallel
-        const [weatherRes, forecastRes] = await Promise.all([
-          fetch(`/api/weather?lat=${lat}&lon=${lon}`),
-          fetch(`/api/forecast/daily?lat=${lat}&lon=${lon}`),
-        ]);
+        // Single API call — Open-Meteo returns current + hourly + daily
+        const weatherRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
 
         if (!weatherRes.ok) {
           const errData = await weatherRes.json();
-          throw new Error(errData.error || "Weather data unavailable");
+          throw new Error(errData.error || "Data cuaca tidak tersedia");
         }
 
-        const weatherData = await weatherRes.json();
-        const current = weatherData.current;
+        const data = await weatherRes.json();
+        const current = data.current;
         setWeather(current);
-        setHourly(weatherData.hourly || []);
+        setHourly(data.hourly || []);
+        setDaily(data.daily || []);
 
-        const condition = parseCondition(current.condition);
+        const condition = wmoToCondition(current.weatherCode);
         setBgCondition(condition);
-
-        if (forecastRes.ok) {
-          const forecastData = await forecastRes.json();
-          setDaily(forecastData.daily || []);
-        }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Something went wrong"
+          err instanceof Error ? err.message : "Terjadi kesalahan"
         );
       } finally {
         setLoading(false);
@@ -197,26 +180,17 @@ export default function Home() {
       {/* Floating ambient orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 30, -20, 0],
-            y: [0, -40, 20, 0],
-          }}
+          animate={{ x: [0, 30, -20, 0], y: [0, -40, 20, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
           className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white/5 blur-3xl"
         />
         <motion.div
-          animate={{
-            x: [0, -40, 20, 0],
-            y: [0, 30, -30, 0],
-          }}
+          animate={{ x: [0, -40, 20, 0], y: [0, 30, -30, 0] }}
           transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
           className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl"
         />
         <motion.div
-          animate={{
-            x: [0, 20, -30, 0],
-            y: [0, -20, 40, 0],
-          }}
+          animate={{ x: [0, 20, -30, 0], y: [0, -20, 40, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/3 blur-3xl"
         />
@@ -232,13 +206,13 @@ export default function Home() {
           className="text-center mb-8"
         >
           <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight flex items-center gap-2 justify-center">
-            <Wind className="h-8 w-8 text-white/70" />
+            <CloudSunRain className="h-8 w-8 text-white/70" />
             <span className="bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent">
-              Aura
+              Cuaca
             </span>
           </h1>
           <p className="text-sm text-white/40 mt-1">
-            Real-time weather &amp; live webcams
+            Prakiraan cuaca real-time &amp; webcam langsung
           </p>
         </motion.div>
 
@@ -262,7 +236,7 @@ export default function Home() {
               >
                 <Loader2 className="h-10 w-10 text-white/40 animate-spin" />
                 <p className="text-white/40 mt-4 text-sm">
-                  Fetching weather data...
+                  Mengambil data cuaca...
                 </p>
               </motion.div>
             )}
@@ -283,7 +257,7 @@ export default function Home() {
                   onClick={() => lastCity && fetchWeather(lastCity)}
                   className="mt-4 text-white/40 hover:text-white/70"
                 >
-                  <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                  <RefreshCw className="h-3 w-3 mr-1" /> Coba Lagi
                 </Button>
               </motion.div>
             )}
@@ -297,27 +271,27 @@ export default function Home() {
                 className="space-y-6"
               >
                 <CurrentWeather
-                  city={locationName || "Unknown"}
+                  city={locationName || "Tidak Diketahui"}
                   temp={weather.temp}
                   feelsLike={weather.feelsLike}
                   tempMin={weather.tempMin}
                   tempMax={weather.tempMax}
-                  dewpoint={weather.dewpoint}
                   humidity={weather.humidity}
                   pressure={weather.pressure}
                   windSpeed={weather.windSpeed}
                   windDeg={weather.windDeg}
                   gust={weather.gust}
                   precip={weather.precip}
-                  snow={weather.snow}
                   clouds={weather.clouds}
-                  condition={weather.condition}
-                  cape={weather.cape}
+                  condition={wmoToCondition(weather.weatherCode)}
                   visibility={weather.visibility}
                   weatherIcon={getWeatherIcon(
-                    parseCondition(weather.condition),
-                    night
+                    wmoToCondition(weather.weatherCode),
+                    !weather.isDay
                   )}
+                  sunrise={daily?.[0]?.sunrise}
+                  sunset={daily?.[0]?.sunset}
+                  uvIndexMax={daily?.[0]?.uvIndexMax}
                 />
 
                 {hourly && hourly.length > 0 && (
@@ -328,11 +302,12 @@ export default function Home() {
                   <DailyForecast list={daily} />
                 )}
 
-                {/* Live Webcams */}
+                {/* Windy Map & Webcam Embed */}
                 {coords && (
-                  <LiveWebcams
+                  <WindyMap
                     lat={coords.lat}
                     lon={coords.lon}
+                    cityName={locationName}
                   />
                 )}
               </motion.div>
@@ -358,8 +333,8 @@ export default function Home() {
                   {getWeatherIcon(bgCondition, night)}
                 </motion.div>
                 <p className="text-white/40 text-sm max-w-xs">
-                  Search for a city or use your location to get real-time
-                  weather, forecasts, and live webcams
+                  Cari nama kota atau gunakan lokasi Anda untuk melihat
+                  prakiraan cuaca, peta, dan webcam langsung
                 </p>
               </motion.div>
             )}
@@ -374,9 +349,9 @@ export default function Home() {
           className="mt-auto pt-12 text-center"
         >
           <p className="text-xs text-white/20">
-            Powered by Windy API &bull; Webcams by Windy &bull; Enhanced by{" "}
-            <span className="text-white/30">Aura</span> &bull; Built with
-            Next.js 16
+            Data dari Open-Meteo &bull; Peta dari Windy.com &bull;
+            <span className="text-white/30"> Cuaca</span> &bull;
+            Dibuat dengan Next.js 16
           </p>
         </motion.footer>
       </main>

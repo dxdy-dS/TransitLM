@@ -1,4 +1,4 @@
-// Weather condition utilities — supports both OpenWeather IDs and Windy condition strings
+// Weather condition utilities — WMO weather codes from Open-Meteo
 
 export type WeatherCondition =
   | "clear"
@@ -13,17 +13,27 @@ export type WeatherCondition =
   | "dust"
   | "tornado";
 
-export function getWeatherCondition(id: number): WeatherCondition {
-  if (id >= 200 && id < 300) return "thunderstorm";
-  if (id >= 300 && id < 400) return "drizzle";
-  if (id >= 500 && id < 600) return "rain";
-  if (id >= 600 && id < 700) return "snow";
-  if (id === 701 || id === 721) return "mist";
-  if (id === 741) return "fog";
-  if (id === 711 || id === 731 || id === 751 || id === 761) return "dust";
-  if (id === 781) return "tornado";
-  if (id === 800) return "clear";
+// Map WMO weather codes to conditions
+export function wmoToCondition(code: number): WeatherCondition {
+  if (code === 0) return "clear";
+  if (code === 1) return "clear"; // mainly clear
+  if (code === 2) return "clouds"; // partly cloudy
+  if (code === 3) return "clouds"; // overcast
+  if (code >= 45 && code <= 48) return "fog"; // fog / depositing rime fog
+  if (code >= 51 && code <= 55) return "drizzle"; // drizzle
+  if (code >= 56 && code <= 57) return "drizzle"; // freezing drizzle
+  if (code >= 61 && code <= 65) return "rain"; // rain
+  if (code >= 66 && code <= 67) return "rain"; // freezing rain
+  if (code >= 71 && code <= 77) return "snow"; // snow fall
+  if (code >= 80 && code <= 82) return "rain"; // rain showers
+  if (code >= 85 && code <= 86) return "snow"; // snow showers
+  if (code === 95) return "thunderstorm"; // thunderstorm
+  if (code >= 96 && code <= 99) return "thunderstorm"; // thunderstorm with hail
   return "clouds";
+}
+
+export function getWeatherCondition(id: number): WeatherCondition {
+  return wmoToCondition(id);
 }
 
 export function parseCondition(str: string): WeatherCondition {
@@ -123,11 +133,16 @@ export function isNightByTime(ts: number): boolean {
 
 export function getWindDirection(deg: number): string {
   const dirs = [
+    "U", "U-TH", "TH", "T-TH", "T", "T-TG", "TG", "TG-SE",
+    "SE", "SE-SE", "S", "S-BD", "BD", "BD-BL", "BL", "BL-U",
+  ];
+  // Also keep English fallback
+  const dirsEn = [
     "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
     "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
   ];
   const index = Math.round(((deg % 360 + 360) % 360) / 22.5) % 16;
-  return dirs[index];
+  return dirs[index] || dirsEn[index];
 }
 
 export function formatTemp(temp: number): string {
@@ -135,11 +150,11 @@ export function formatTemp(temp: number): string {
 }
 
 export function getUVLevel(uv: number): { label: string; color: string } {
-  if (uv <= 2) return { label: "Low", color: "text-green-400" };
-  if (uv <= 5) return { label: "Moderate", color: "text-yellow-400" };
-  if (uv <= 7) return { label: "High", color: "text-orange-400" };
-  if (uv <= 10) return { label: "Very High", color: "text-red-400" };
-  return { label: "Extreme", color: "text-purple-400" };
+  if (uv <= 2) return { label: "Rendah", color: "text-green-400" };
+  if (uv <= 5) return { label: "Sedang", color: "text-yellow-400" };
+  if (uv <= 7) return { label: "Tinggi", color: "text-orange-400" };
+  if (uv <= 10) return { label: "Sangat Tinggi", color: "text-red-400" };
+  return { label: "Ekstrem", color: "text-purple-400" };
 }
 
 export function getVisibilityLabel(m: number): string {
@@ -150,37 +165,37 @@ export function getVisibilityLabel(m: number): string {
 
 export function getConditionLabel(condition: string): string {
   const labels: Record<string, string> = {
-    clear: "Clear Sky",
-    clouds: "Cloudy",
-    rain: "Rain",
-    drizzle: "Light Rain",
-    thunderstorm: "Thunderstorm",
-    snow: "Snow",
-    mist: "Mist",
-    fog: "Fog",
-    haze: "Haze",
-    dust: "Dust",
+    clear: "Cerah",
+    clouds: "Berawan",
+    rain: "Hujan",
+    drizzle: "Gerimis",
+    thunderstorm: "Badai Petir",
+    snow: "Salju",
+    mist: "Berkabut",
+    fog: "Berkabut Tebal",
+    haze: "Kabut Asap",
+    dust: "Debu",
     tornado: "Tornado",
   };
   return labels[condition] || condition;
 }
 
 export function getCloudCoverLabel(percent: number): string {
-  if (percent <= 10) return "Clear";
-  if (percent <= 30) return "Few Clouds";
-  if (percent <= 60) return "Partly Cloudy";
-  if (percent <= 85) return "Mostly Cloudy";
-  return "Overcast";
+  if (percent <= 10) return "Cerah";
+  if (percent <= 30) return "Sedikit Berawan";
+  if (percent <= 60) return "Berawan Sebagian";
+  if (percent <= 85) return "Mayoritas Berawan";
+  return "Mendung";
 }
 
 export function getPrecipTypeLabel(ptype: number): string {
   const labels: Record<number, string> = {
-    0: "None",
-    1: "Rain",
-    3: "Freezing Rain",
-    5: "Snow",
-    7: "Mixed",
-    8: "Ice Pellets",
+    0: "Tidak Ada",
+    1: "Hujan",
+    3: "Hujan Beku",
+    5: "Salju",
+    7: "Campuran",
+    8: "Es",
   };
-  return labels[ptype] || "Unknown";
+  return labels[ptype] || "Tidak Diketahui";
 }

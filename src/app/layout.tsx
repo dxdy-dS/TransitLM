@@ -14,26 +14,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aura Weather — Live Weather & Webcam App",
+  title: "Cuaca — Prakiraan Cuaca & Webcam Langsung",
   description:
-    "A stunning weather application with real-time data from Windy.com, hourly & daily forecasts, live webcams, and animated weather effects. Built with Next.js 16.",
+    "Aplikasi cuaca real-time dengan prakiraan per jam, 7 hari, peta cuaca interaktif, dan webcam langsung. Dibuat dengan Next.js 16 dan Open-Meteo.",
   keywords: [
+    "cuaca",
+    "prakiraan",
     "weather",
-    "webcam",
     "forecast",
+    "webcam",
+    "Indonesia",
+    "Open-Meteo",
     "Windy",
     "Next.js",
-    "TypeScript",
-    "Tailwind CSS",
   ],
   authors: [{ name: "d(x)d(y)" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Aura Weather — Live Weather & Webcam App",
+    title: "Cuaca — Prakiraan Cuaca & Webcam Langsung",
     description:
-      "Real-time weather forecasts with live webcams powered by Windy.com",
+      "Aplikasi cuaca Indonesia dengan data real-time dari Open-Meteo dan peta interaktif dari Windy.com",
     type: "website",
   },
 };
@@ -44,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="id" suppressHydrationWarning className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
       >

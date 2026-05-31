@@ -22,10 +22,14 @@ interface GeoResult {
   timezone: string;
 }
 
+// Indonesian cities prioritized
 const POPULAR_CITIES = [
-  "Jakarta", "Tokyo", "New York", "London", "Paris",
-  "Sydney", "Dubai", "Singapore", "Seoul", "Bangkok",
-  "Berlin", "Mumbai", "Shanghai", "Los Angeles", "Istanbul",
+  "Jakarta", "Surabaya", "Bandung", "Medan", "Semarang",
+  "Makassar", "Palembang", "Denpasar", "Yogyakarta", "Balikpapan",
+  "Malang", "Solo", "Manado", "Pontianak", "Banjarmasin",
+  "Padang", "Pekanbaru", "Batam", "Lombok", "Bali",
+  "Tokyo", "New York", "London", "Paris", "Dubai",
+  "Singapore", "Bangkok", "Sydney", "Seoul", "Shanghai",
 ];
 
 export default function SearchBar({
@@ -39,7 +43,6 @@ export default function SearchBar({
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Search geocoding API with debounce
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -49,7 +52,6 @@ export default function SearchBar({
       return;
     }
 
-    // Filter popular cities first (instant)
     const popularMatches = POPULAR_CITIES.filter((c) =>
       c.toLowerCase().includes(query.toLowerCase())
     );
@@ -63,8 +65,9 @@ export default function SearchBar({
         if (res.ok) {
           const data = await res.json();
           const geoResults: GeoResult[] = data.results || [];
-          // Merge with popular cities that aren't in results
-          const existingNames = new Set(geoResults.map((r: GeoResult) => r.name.toLowerCase()));
+          const existingNames = new Set(
+            geoResults.map((r: GeoResult) => r.name.toLowerCase())
+          );
           popularMatches.forEach((name) => {
             if (!existingNames.has(name.toLowerCase())) {
               geoResults.unshift({
@@ -82,7 +85,6 @@ export default function SearchBar({
           setShowSuggestions(true);
         }
       } catch {
-        // Fall back to popular cities only
         setSuggestions(
           popularMatches.slice(0, 6).map((name) => ({
             name,
@@ -120,7 +122,6 @@ export default function SearchBar({
     (result: GeoResult) => {
       setQuery(result.name);
       setShowSuggestions(false);
-      // If we have coordinates from geocoding, use those directly
       if (result.latitude && result.longitude) {
         onGeolocate(result.latitude, result.longitude);
       } else {
@@ -137,13 +138,12 @@ export default function SearchBar({
           onGeolocate(pos.coords.latitude, pos.coords.longitude);
         },
         () => {
-          console.error("Geolocation failed");
+          console.error("Geolokasi gagal");
         }
       );
     }
   }, [onGeolocate]);
 
-  // Keyboard shortcut: press / to focus
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (
@@ -161,7 +161,7 @@ export default function SearchBar({
   const displayList =
     suggestions.length > 0
       ? suggestions
-      : POPULAR_CITIES.slice(0, 5).map((name) => ({
+      : POPULAR_CITIES.slice(0, 6).map((name) => ({
           name,
           latitude: 0,
           longitude: 0,
@@ -179,7 +179,7 @@ export default function SearchBar({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
             <Input
               type="text"
-              placeholder="Search city... (press /)"
+              placeholder="Cari kota... (tekan /)"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -199,7 +199,7 @@ export default function SearchBar({
             variant="ghost"
             onClick={handleGeolocate}
             className="h-12 w-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl hover:bg-white/20 transition-all text-white/70 hover:text-white"
-            title="Use my location"
+            title="Gunakan lokasi saya"
           >
             <MapPin className="h-4 w-4" />
           </Button>

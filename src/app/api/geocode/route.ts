@@ -14,9 +14,9 @@ export async function GET(request: Request) {
   if (lat && lon) {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&accept-language=id`,
         {
-          headers: { "User-Agent": "Aura-Weather-App/1.0" },
+          headers: { "User-Agent": "Cuaca-Weather-App/1.0" },
           next: { revalidate: 3600 },
         }
       );
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
             data.address?.town ||
             data.address?.village ||
             data.address?.county ||
-            "Unknown",
+            "Lokasi Tidak Dikenal",
           country: data.address?.country_code?.toUpperCase() || "",
           countryName: data.address?.country || "",
           lat: parseFloat(lat),
@@ -54,25 +54,25 @@ export async function GET(request: Request) {
   // Forward geocoding: city name -> coordinates
   if (!q) {
     return NextResponse.json(
-      { error: "Provide city name (q) or coordinates (lat, lon)" },
+      { error: "Berikan nama kota (q) atau koordinat (lat, lon)" },
       { status: 400 }
     );
   }
 
   try {
     const res = await fetch(
-      `${GEOCODING_URL}?name=${encodeURIComponent(q)}&count=${limit}&language=en&format=json`,
+      `${GEOCODING_URL}?name=${encodeURIComponent(q)}&count=${limit}&language=id&format=json`,
       { next: { revalidate: 86400 } }
     );
 
     if (!res.ok) {
-      return NextResponse.json({ error: "Geocoding failed" }, { status: 502 });
+      return NextResponse.json({ error: "Pencarian lokasi gagal" }, { status: 502 });
     }
 
     const data = await res.json();
 
     if (!data.results || data.results.length === 0) {
-      return NextResponse.json({ error: "City not found" }, { status: 404 });
+      return NextResponse.json({ error: "Kota tidak ditemukan" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -87,6 +87,6 @@ export async function GET(request: Request) {
       })),
     });
   } catch {
-    return NextResponse.json({ error: "Geocoding failed" }, { status: 500 });
+    return NextResponse.json({ error: "Pencarian lokasi gagal" }, { status: 500 });
   }
 }
