@@ -45,7 +45,6 @@ export default function SearchBar({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
     if (query.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -71,13 +70,8 @@ export default function SearchBar({
           popularMatches.forEach((name) => {
             if (!existingNames.has(name.toLowerCase())) {
               geoResults.unshift({
-                name,
-                latitude: 0,
-                longitude: 0,
-                country: "",
-                countryName: "",
-                admin1: "",
-                timezone: "",
+                name, latitude: 0, longitude: 0,
+                country: "", countryName: "", admin1: "", timezone: "",
               });
             }
           });
@@ -87,13 +81,8 @@ export default function SearchBar({
       } catch {
         setSuggestions(
           popularMatches.slice(0, 6).map((name) => ({
-            name,
-            latitude: 0,
-            longitude: 0,
-            country: "",
-            countryName: "",
-            admin1: "",
-            timezone: "",
+            name, latitude: 0, longitude: 0,
+            country: "", countryName: "", admin1: "", timezone: "",
           }))
         );
         setShowSuggestions(true);
@@ -134,22 +123,15 @@ export default function SearchBar({
   const handleGeolocate = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          onGeolocate(pos.coords.latitude, pos.coords.longitude);
-        },
-        () => {
-          console.error("Geolokasi gagal");
-        }
+        (pos) => onGeolocate(pos.coords.latitude, pos.coords.longitude),
+        () => console.error("Geolokasi gagal")
       );
     }
   }, [onGeolocate]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (
-        e.key === "/" &&
-        document.activeElement !== document.querySelector("input")
-      ) {
+      if (e.key === "/" && document.activeElement !== document.querySelector("input")) {
         e.preventDefault();
         document.querySelector<HTMLInputElement>("input[type='text']")?.focus();
       }
@@ -158,18 +140,12 @@ export default function SearchBar({
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const displayList =
-    suggestions.length > 0
-      ? suggestions
-      : POPULAR_CITIES.slice(0, 6).map((name) => ({
-          name,
-          latitude: 0,
-          longitude: 0,
-          country: "",
-          countryName: "",
-          admin1: "",
-          timezone: "",
-        }));
+  const displayList = suggestions.length > 0
+    ? suggestions
+    : POPULAR_CITIES.slice(0, 6).map((name) => ({
+        name, latitude: 0, longitude: 0,
+        country: "", countryName: "", admin1: "", timezone: "",
+      }));
 
   return (
     <div className="w-full max-w-lg mx-auto relative">
@@ -181,10 +157,7 @@ export default function SearchBar({
               type="text"
               placeholder="Cari kota... (tekan /)"
               value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
+              onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               className="pl-10 pr-4 h-12 bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/40 rounded-xl focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all"
@@ -194,26 +167,17 @@ export default function SearchBar({
             )}
           </div>
           <Button
-            type="button"
-            size="icon"
-            variant="ghost"
+            type="button" size="icon" variant="ghost"
             onClick={handleGeolocate}
             className="h-12 w-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl hover:bg-white/20 transition-all text-white/70 hover:text-white"
             title="Gunakan lokasi saya"
           >
             <MapPin className="h-4 w-4" />
           </Button>
-          <Button
-            type="submit"
-            size="icon"
-            disabled={isLoading || !query.trim()}
+          <Button type="submit" size="icon" disabled={isLoading || !query.trim()}
             className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-xl hover:bg-white/30 transition-all text-white disabled:opacity-40"
           >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4" />
-            )}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
         </div>
       </form>
@@ -224,22 +188,17 @@ export default function SearchBar({
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
             className="absolute top-full mt-2 w-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-50"
           >
             {displayList.map((item) => (
-              <button
-                key={`${item.name}-${item.country}`}
-                type="button"
+              <button key={`${item.name}-${item.country}`} type="button"
                 onMouseDown={() => handleSuggestionClick(item)}
                 className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2"
               >
                 <MapPin className="h-3 w-3 text-white/40 shrink-0" />
                 <span className="flex-1">{item.name}</span>
                 {(item.country || item.countryName) && (
-                  <span className="text-xs text-white/30">
-                    {item.countryName || item.country}
-                  </span>
+                  <span className="text-xs text-white/30">{item.countryName || item.country}</span>
                 )}
               </button>
             ))}

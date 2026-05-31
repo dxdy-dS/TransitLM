@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  wmoToCondition,
+  parseCondition,
   getWeatherIcon,
   formatTemp,
   getConditionLabel,
@@ -14,17 +14,18 @@ import {
 interface HourlyItem {
   dt: number;
   temp: number;
-  feelsLike: number;
-  precipProb: number;
-  precip: number;
-  weatherCode: number;
+  dewpoint: number;
   windSpeed: number;
   windDeg: number;
   gust: number;
+  precip: number;
+  snow: number;
+  ptype: number;
   clouds: number;
   humidity: number;
-  uvIndex: number;
-  visibility: number;
+  pressure: number;
+  cape: number;
+  condition: string;
 }
 
 interface HourlyForecastProps {
@@ -33,21 +34,18 @@ interface HourlyForecastProps {
 
 export default function HourlyForecast({ list }: HourlyForecastProps) {
   const hourly = list.slice(0, 24).map((item) => {
-    const condition = wmoToCondition(item.weatherCode);
+    const condition = parseCondition(item.condition);
     const isNight = isNightByTime(item.dt);
     const date = new Date(item.dt * 1000);
     return {
-      time: date.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
       temp: Math.round(item.temp),
       icon: getWeatherIcon(condition, isNight),
       condition: getConditionLabel(condition),
-      precipProb: item.precipProb,
       precip: item.precip,
       windSpeed: item.windSpeed,
       windDir: getWindDirection(item.windDeg),
+      gust: item.gust,
     };
   });
 
@@ -77,13 +75,13 @@ export default function HourlyForecast({ list }: HourlyForecastProps) {
                 <span className="text-sm font-semibold text-white/90">
                   {formatTemp(h.temp)}
                 </span>
-                {h.precipProb > 0 && (
+                {h.precip > 0 && (
                   <span className="text-[10px] text-blue-300 mt-1">
-                    {h.precipProb}%
+                    {h.precip.toFixed(1)}mm
                   </span>
                 )}
                 <span className="text-[10px] text-white/25 mt-0.5">
-                  {h.windSpeed.toFixed(0)} km/j
+                  {h.windSpeed.toFixed(0)} km/j {h.windDir}
                 </span>
               </motion.div>
             ))}

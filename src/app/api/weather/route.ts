@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-// Free weather data from Open-Meteo — no API key required
-const OPENMETEO_URL = "https://api.open-meteo.com/v1/forecast";
+// Windy.com Point Forecast API v2
+const WINDY_KEY = "JPtmBbJ1PxqUEmCryGwpEzUxLUwWrdxf";
+const WINDY_URL = "https://api.windy.com/api/point-forecast/v2";
 
-// Simple in-memory cache (5 min TTL)
+// Cache (5 min TTL)
 const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -13,9 +14,34 @@ function getCached(key: string) {
   cache.delete(key);
   return null;
 }
-
 function setCache(key: string, data: unknown) {
   cache.set(key, { data, ts: Date.now() });
+}
+
+// Convert Kelvin to Celsius
+const K2C = (k: number) => k - 273.15;
+// Convert m to mm
+const M2MM = (m: number) => m * 1000;
+// Convert m/s to km/h
+const MS2KMH = (ms: number) => ms * 3.6;
+
+function deriveCondition(
+  precip: number,
+  ptype: number,
+  clouds: number,
+  cape: number,
+  gust: number
+): string {
+  if (cape > 1000 && gust > 15 && precip > 2) return "thunderstorm";
+  if (cape > 2000 && precip > 0) return "thunderstorm";
+  if (ptype === 5 || ptype === 7) return "snow";
+  if (precip > 5) return "rain";
+  if (precip > 1) return "rain";
+  if (ptype === 1 && precip > 0) return "drizzle";
+  if (precip > 0) return "drizzle";
+  if (clouds > 80) return "clouds";
+  if (clouds > 40) return "clouds";
+  return "clear";
 }
 
 export async function GET(request: Request) {
@@ -25,148 +51,219 @@ export async function GET(request: Request) {
 
   if (!lat || !lon) {
     return NextResponse.json(
-      { error: "Provide coordinates (lat, lon)" },
+      { error: "Berikan koordinat (lat, lon)" },
       { status: 400 }
     );
   }
 
-  const cacheKey = `weather-${lat}-${lon}`;
+  const cacheKey = `windy-weather-${lat}-${lon}`;
   const cached = getCached(cacheKey);
   if (cached) return NextResponse.json(cached);
 
   try {
-    const params = new URLSearchParams({
-      latitude: lat,
-      longitude: lon,
-      current: [
-        "temperature_2m",
-        "relative_humidity_2m",
-        "apparent_temperature",
-        "precipitation",
-        "weather_code",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "wind_gusts_10m",
-        "surface_pressure",
-        "cloud_cover",
-        "is_day",
-      ].join(","),
-      hourly: [
-        "temperature_2m",
-        "apparent_temperature",
-        "precipitation_probability",
-        "precipitation",
-        "weather_code",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "wind_gusts_10m",
-        "cloud_cover",
-        "relative_humidity_2m",
-        "uv_index",
-        "visibility",
-      ].join(","),
-      daily: [
-        "temperature_2m_max",
-        "temperature_2m_min",
-        "apparent_temperature_max",
-        "apparent_temperature_min",
-        "precipitation_sum",
-        "precipitation_probability_max",
-        "weather_code",
-        "wind_speed_10m_max",
-        "wind_gusts_10m_max",
-        "sunrise",
-        "sunset",
-        "uv_index_max",
-      ].join(","),
-      timezone: "auto",
-      forecast_days: "7",
-    });
+    const body = {
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
+      model: "gfs",
+      parameters: [
+        "temp", "dewpoint", "wind", "windGust", "precip",
+        "convPrecip", "snowPrecip", "ptype", "lclouds",
+        "mclouds", "hclouds", "rh", "pressure", "cape",
+      ],
+      levels: ["surface"],
+      key: WINDY_KEY,
+    };
 
-    const res = await fetch(`${OPENMETEO_URL}?${params}`, {
-      next: { revalidate: 300 },
+    const res = await fetch(WINDY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
+      const errText = await res.text();
       return NextResponse.json(
-        { error: "Weather service unavailable" },
-        { status: 502 }
+        { error: `Windy API: ${errText}` },
+        { status: res.status }
       );
     }
 
-    const raw = await res.json();
+    const data = await res.json();
+    const ts: number[] = data.ts || [];
 
-    // Transform Open-Meteo data into app-friendly format
-    const current = {
-      dt: Math.floor(new Date(raw.current.time).getTime() / 1000),
-      temp: raw.current.temperature_2m,
-      feelsLike: raw.current.apparent_temperature,
-      humidity: raw.current.relative_humidity_2m,
-      windSpeed: raw.current.wind_speed_10m,
-      windDeg: raw.current.wind_direction_10m,
-      gust: raw.current.wind_gusts_10m,
-      precip: raw.current.precipitation,
-      weatherCode: raw.current.weather_code,
-      clouds: raw.current.cloud_cover,
-      pressure: raw.current.surface_pressure,
-      isDay: raw.current.is_day === 1,
-      visibility: raw.current.visibility || 20000,
+    if (ts.length === 0) {
+      return NextResponse.json({ error: "Tidak ada data" }, { status: 404 });
+    }
+
+    // Extract arrays (values in K, m, Pa, m/s — need conversion)
+    const temps = (data["temp-surface"] || []).map(K2C);
+    const dewpoints = (data["dewpoint-surface"] || []).map(K2C);
+    const windU = data["wind_u-surface"] || [];
+    const windV = data["wind_v-surface"] || [];
+    const gusts = data["gust-surface"] || [];
+    const precip = (data["past3hprecip-surface"] || []).map(M2MM);
+    const snowPrecip = (data["past3hsnowprecip-surface"] || []).map(M2MM);
+    const ptype = data["ptype-surface"] || [];
+    const lclouds = data["lclouds-surface"] || [];
+    const mclouds = data["mclouds-surface"] || [];
+    const hclouds = data["hclouds-surface"] || [];
+    const humidity = data["rh-surface"] || [];
+    const pressure = (data["pressure-surface"] || []).map((p: number) => p / 100);
+    const cape = data["cape-surface"] || [];
+
+    // Helper: wind speed + direction from U/V components
+    const calcWind = (u: number, v: number) => {
+      const speed = Math.sqrt(u * u + v * v);
+      const deg = ((Math.atan2(v, u) * 180) / Math.PI + 360) % 360;
+      return { speed: MS2KMH(speed), deg };
     };
 
-    // Hourly forecast
-    const hourly = raw.hourly.time.map((t: string, i: number) => {
-      const ts = Math.floor(new Date(t).getTime() / 1000);
+    // Build current weather from first point
+    const { speed: cWindSpeed, deg: cWindDeg } = calcWind(windU[0] || 0, windV[0] || 0);
+    const currentClouds = Math.max(lclouds[0] || 0, mclouds[0] || 0, hclouds[0] || 0);
+    const currentCondition = deriveCondition(precip[0] || 0, ptype[0] || 0, currentClouds, cape[0] || 0, gusts[0] || 0);
+
+    const current = {
+      dt: ts[0] / 1000,
+      temp: Math.round(temps[0] * 10) / 10,
+      feelsLike: Math.round(temps[0] * 10) / 10, // simplified
+      tempMin: Math.round(temps[0] * 10) / 10,
+      tempMax: Math.round(temps[0] * 10) / 10,
+      dewpoint: Math.round(dewpoints[0] * 10) / 10,
+      humidity: humidity[0] || 0,
+      pressure: Math.round(pressure[0]),
+      windSpeed: Math.round(cWindSpeed * 10) / 10,
+      windDeg: Math.round(cWindDeg),
+      gust: Math.round(MS2KMH(gusts[0] || 0) * 10) / 10,
+      precip: Math.round(precip[0] * 100) / 100,
+      snow: Math.round(snowPrecip[0] * 100) / 100,
+      ptype: ptype[0] || 0,
+      clouds: Math.round(currentClouds),
+      condition: currentCondition,
+      cape: Math.round(cape[0] || 0),
+      visibility: 20000, // not directly available from Windy
+    };
+
+    // Build hourly forecast (up to 48 hours)
+    const hourly = ts.slice(0, 48).map((t, i) => {
+      const { speed: hWind, deg: hDeg } = calcWind(windU[i] || 0, windV[i] || 0);
+      const hClouds = Math.max(lclouds[i] || 0, mclouds[i] || 0, hclouds[i] || 0);
       return {
-        dt: ts,
-        temp: raw.hourly.temperature_2m[i],
-        feelsLike: raw.hourly.apparent_temperature[i],
-        precipProb: raw.hourly.precipitation_probability[i],
-        precip: raw.hourly.precipitation[i],
-        weatherCode: raw.hourly.weather_code[i],
-        windSpeed: raw.hourly.wind_speed_10m[i],
-        windDeg: raw.hourly.wind_direction_10m[i],
-        gust: raw.hourly.wind_gusts_10m[i],
-        clouds: raw.hourly.cloud_cover[i],
-        humidity: raw.hourly.relative_humidity_2m[i],
-        uvIndex: raw.hourly.uv_index[i],
-        visibility: raw.hourly.visibility[i],
+        dt: t / 1000,
+        temp: Math.round(temps[i] * 10) / 10,
+        dewpoint: Math.round(dewpoints[i] * 10) / 10,
+        windSpeed: Math.round(hWind * 10) / 10,
+        windDeg: Math.round(hDeg),
+        gust: Math.round(MS2KMH(gusts[i] || 0) * 10) / 10,
+        precip: Math.round(precip[i] * 100) / 100,
+        snow: Math.round(snowPrecip[i] * 100) / 100,
+        ptype: ptype[i] || 0,
+        clouds: Math.round(hClouds),
+        humidity: humidity[i] || 0,
+        pressure: Math.round(pressure[i]),
+        cape: Math.round(cape[i] || 0),
+        condition: deriveCondition(precip[i] || 0, ptype[i] || 0, hClouds, cape[i] || 0, gusts[i] || 0),
       };
     });
 
-    // Daily forecast
-    const daily = raw.daily.time.map((t: string, i: number) => {
-      const ts = Math.floor(new Date(t + "T00:00:00").getTime() / 1000);
+    // Build daily forecast (group by day, up to 7 days)
+    const dayMap = new Map<string, {
+      date: Date;
+      temps: number[];
+      dewpoints: number[];
+      windSpeeds: number[];
+      windDegs: number[];
+      gusts: number[];
+      precips: number[];
+      snows: number[];
+      ptypes: number[];
+      cloudValues: number[];
+      humidities: number[];
+      pressures: number[];
+      capes: number[];
+    }>();
+
+    ts.forEach((t, i) => {
+      const d = new Date(t);
+      const dayKey = d.toISOString().split("T")[0];
+      if (!dayMap.has(dayKey)) {
+        dayMap.set(dayKey, {
+          date: d, temps: [], dewpoints: [], windSpeeds: [], windDegs: [],
+          gusts: [], precips: [], snows: [], ptypes: [], cloudValues: [],
+          humidities: [], pressures: [], capes: [],
+        });
+      }
+      const day = dayMap.get(dayKey)!;
+      day.temps.push(temps[i]);
+      day.dewpoints.push(dewpoints[i]);
+      const { speed, deg } = calcWind(windU[i] || 0, windV[i] || 0);
+      day.windSpeeds.push(speed);
+      day.windDegs.push(deg);
+      day.gusts.push(gusts[i] || 0);
+      day.precips.push(precip[i]);
+      day.snows.push(snowPrecip[i]);
+      if (ptype[i] > 0) day.ptypes.push(ptype[i]);
+      day.cloudValues.push(Math.max(lclouds[i] || 0, mclouds[i] || 0, hclouds[i] || 0));
+      day.humidities.push(humidity[i] || 0);
+      day.pressures.push(pressure[i]);
+      day.capes.push(cape[i] || 0);
+    });
+
+    const daily = Array.from(dayMap.values()).slice(0, 7).map(day => {
+      const tempMin = Math.min(...day.temps);
+      const tempMax = Math.max(...day.temps);
+      const avgWind = day.windSpeeds.reduce((a, b) => a + b, 0) / day.windSpeeds.length;
+      const avgWindDeg = day.windDegs[Math.floor(day.windDegs.length / 2)];
+      const maxGust = Math.max(...day.gusts.map(MS2KMH));
+      const totalPrecip = day.precips.reduce((a, b) => a + b, 0);
+      const totalSnow = day.snows.reduce((a, b) => a + b, 0);
+      const avgClouds = day.cloudValues.reduce((a, b) => a + b, 0) / day.cloudValues.length;
+      const avgHumidity = day.humidities.reduce((a, b) => a + b, 0) / day.humidities.length;
+      const avgPressure = day.pressures.reduce((a, b) => a + b, 0) / day.pressures.length;
+      const maxCape = Math.max(...day.capes);
+
+      // Dominant ptype
+      const ptypeCounts = new Map<number, number>();
+      day.ptypes.forEach(p => ptypeCounts.set(p, (ptypeCounts.get(p) || 0) + 1));
+      const domPtype = ptypeCounts.size > 0
+        ? [...ptypeCounts.entries()].sort((a, b) => b[1] - a[1])[0][0] : 0;
+
+      const condition = deriveCondition(totalPrecip, domPtype, avgClouds, maxCape, maxGust);
+      const precipProb = totalPrecip > 0 ? Math.min(100, Math.round(totalPrecip * 8)) : 0;
+
       return {
-        dt: ts,
-        date: t,
-        tempMax: raw.daily.temperature_2m_max[i],
-        tempMin: raw.daily.temperature_2m_min[i],
-        feelsLikeMax: raw.daily.apparent_temperature_max[i],
-        feelsLikeMin: raw.daily.apparent_temperature_min[i],
-        precipSum: raw.daily.precipitation_sum[i],
-        precipProb: raw.daily.precipitation_probability_max[i],
-        weatherCode: raw.daily.weather_code[i],
-        windMax: raw.daily.wind_speed_10m_max[i],
-        gustMax: raw.daily.wind_gusts_10m_max[i],
-        sunrise: Math.floor(new Date(raw.daily.sunrise[i]).getTime() / 1000),
-        sunset: Math.floor(new Date(raw.daily.sunset[i]).getTime() / 1000),
-        uvIndexMax: raw.daily.uv_index_max[i],
+        dt: day.date.getTime() / 1000,
+        date: day.date.toISOString().split("T")[0],
+        tempMin: Math.round(tempMin * 10) / 10,
+        tempMax: Math.round(tempMax * 10) / 10,
+        windSpeed: Math.round(avgWind * 10) / 10,
+        windDeg: Math.round(avgWindDeg),
+        gust: Math.round(maxGust * 10) / 10,
+        precip: Math.round(totalPrecip * 10) / 10,
+        snow: Math.round(totalSnow * 10) / 10,
+        ptype: domPtype,
+        clouds: Math.round(avgClouds),
+        humidity: Math.round(avgHumidity),
+        pressure: Math.round(avgPressure),
+        cape: Math.round(maxCape),
+        condition,
+        pop: precipProb,
       };
     });
 
-    // Set current temp min/max from daily
-    current.tempMin = daily[0]?.tempMin ?? current.temp;
-    current.tempMax = daily[0]?.tempMax ?? current.temp;
+    // Update current min/max from daily
+    if (daily.length > 0) {
+      current.tempMin = daily[0].tempMin;
+      current.tempMax = daily[0].tempMax;
+    }
 
     const result = {
       current,
       hourly,
       daily,
       meta: {
-        source: "open-meteo",
-        timezone: raw.timezone,
-        timezoneAbbrev: raw.timezone_abbreviation,
-        units: raw.current_units,
+        model: "gfs",
+        source: "windy",
         generatedAt: Date.now(),
       },
     };
@@ -175,9 +272,7 @@ export async function GET(request: Request) {
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      {
-        error: `Gagal mengambil data cuaca: ${err instanceof Error ? err.message : "Kesalahan tidak diketahui"}`,
-      },
+      { error: `Gagal: ${err instanceof Error ? err.message : "Kesalahan"}` },
       { status: 500 }
     );
   }
