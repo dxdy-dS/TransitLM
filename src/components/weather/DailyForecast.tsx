@@ -3,62 +3,40 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  getWeatherCondition,
+  parseCondition,
   getWeatherIcon,
   formatTemp,
   getWindDirection,
+  getConditionLabel,
 } from "@/lib/weather";
 
+interface DailyItem {
+  dt: number;
+  date: string;
+  tempMin: number;
+  tempMax: number;
+  windSpeed: number;
+  windDeg: number;
+  gust: number;
+  precip: number;
+  snow: number;
+  ptype: number;
+  clouds: number;
+  humidity: number;
+  pressure: number;
+  cape: number;
+  condition: string;
+  pop: number;
+}
+
 interface DailyForecastProps {
-  list: Array<{
-    dt: number;
-    main: { temp: number; temp_min: number; temp_max: number; humidity: number };
-    weather: Array<{ id: number; description: string }>;
-    wind: { speed: number; deg: number };
-    pop: number;
-  }>;
+  list: DailyItem[];
 }
 
 export default function DailyForecast({ list }: DailyForecastProps) {
-  // Group forecast by day
-  const dailyMap = new Map<string, {
-    date: Date;
-    temps: number[];
-    tempMin: number;
-    tempMax: number;
-    weather: { id: number; description: string };
-    wind: { speed: number; deg: number };
-    pop: number;
-    humidity: number;
-  }>();
+  const daily = list.slice(0, 7);
 
-  list.forEach((item) => {
-    const date = new Date(item.dt * 1000);
-    const dayKey = date.toDateString();
-
-    if (!dailyMap.has(dayKey)) {
-      dailyMap.set(dayKey, {
-        date,
-        temps: [item.main.temp],
-        tempMin: item.main.temp_min,
-        tempMax: item.main.temp_max,
-        weather: item.weather[0],
-        wind: item.wind,
-        pop: item.pop,
-        humidity: item.main.humidity,
-      });
-    } else {
-      const day = dailyMap.get(dayKey)!;
-      day.temps.push(item.main.temp);
-      day.tempMin = Math.min(day.tempMin, item.main.temp_min);
-      day.tempMax = Math.max(day.tempMax, item.main.temp_max);
-      if (item.pop > day.pop) day.pop = item.pop;
-    }
-  });
-
-  const daily = Array.from(dailyMap.values()).slice(0, 7);
-
-  // Find global min/max for the bar
+  // Find global min/max for the temperature bar
   const globalMin = Math.min(...daily.map((d) => d.tempMin));
   const globalMax = Math.max(...daily.map((d) => d.tempMax));
   const range = globalMax - globalMin || 1;
@@ -77,13 +55,13 @@ export default function DailyForecast({ list }: DailyForecastProps) {
         <CardContent className="p-2">
           {daily.map((day, i) => {
             const isToday = i === 0;
-            const condition = getWeatherCondition(day.weather.id);
-            const isNight =
-              new Date().getHours() < 6 || new Date().getHours() >= 19;
+            const condition = parseCondition(day.condition);
             const dayName = isToday
               ? "Today"
-              : day.date.toLocaleDateString([], { weekday: "short" });
-            const dateStr = day.date.toLocaleDateString([], {
+              : new Date(day.dt * 1000).toLocaleDateString([], {
+                  weekday: "short",
+                });
+            const dateStr = new Date(day.dt * 1000).toLocaleDateString([], {
               month: "short",
               day: "numeric",
             });
@@ -93,7 +71,7 @@ export default function DailyForecast({ list }: DailyForecastProps) {
 
             return (
               <motion.div
-                key={day.date.toISOString()}
+                key={day.date}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + i * 0.05 }}
@@ -110,10 +88,12 @@ export default function DailyForecast({ list }: DailyForecastProps) {
 
                 {/* Icon + Pop */}
                 <div className="w-14 shrink-0 flex items-center gap-1">
-                  <span className="text-xl">{getWeatherIcon(condition, isNight)}</span>
+                  <span className="text-xl">
+                    {getWeatherIcon(condition, false)}
+                  </span>
                   {day.pop > 0 && (
                     <span className="text-[10px] text-blue-300">
-                      {Math.round(day.pop * 100)}%
+                      {day.pop}%
                     </span>
                   )}
                 </div>
@@ -137,10 +117,16 @@ export default function DailyForecast({ list }: DailyForecastProps) {
                   </span>
                 </div>
 
-                {/* Wind */}
-                <div className="w-16 shrink-0 text-right hidden sm:block">
-                  <span className="text-xs text-white/35">
-                    {day.wind.speed.toFixed(0)}m/s
+                {/* Precip + Wind */}
+                <div className="w-20 shrink-0 text-right hidden sm:block">
+                  {day.precip > 0 && (
+                    <span className="text-[10px] text-blue-300">
+                      {day.precip.toFixed(1)}mm
+                    </span>
+                  )}
+                  <span className="text-xs text-white/35 block">
+                    {day.windSpeed.toFixed(0)}m/s{" "}
+                    {getWindDirection(day.windDeg)}
                   </span>
                 </div>
               </motion.div>

@@ -2,95 +2,177 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CloudOff, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  CloudOff,
+  RefreshCw,
+  Wind,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/weather/SearchBar";
 import CurrentWeather from "@/components/weather/CurrentWeather";
 import HourlyForecast from "@/components/weather/HourlyForecast";
 import DailyForecast from "@/components/weather/DailyForecast";
+import LiveWebcams from "@/components/weather/LiveWebcams";
 import WeatherParticles from "@/components/weather/WeatherParticles";
 import {
-  getWeatherCondition,
   getWeatherIcon,
   getBackgroundGradient,
   isNightTime,
+  parseCondition,
   type WeatherCondition,
 } from "@/lib/weather";
 
-interface WeatherData {
-  name: string;
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    humidity: number;
-    pressure: number;
-  };
-  weather: Array<{ id: number; main: string; description: string; icon: string }>;
-  wind: { speed: number; deg: number };
-  visibility: number;
-  sys: { sunrise: number; sunset: number; country: string };
-  coord: { lat: number; lon: number };
+interface CurrentWeatherData {
   dt: number;
+  temp: number;
+  feelsLike: number;
+  tempMin: number;
+  tempMax: number;
+  dewpoint: number;
+  humidity: number;
+  pressure: number;
+  windSpeed: number;
+  windDeg: number;
+  gust: number;
+  precip: number;
+  snow: number;
+  ptype: number;
+  clouds: number;
+  condition: string;
+  cape: number;
+  visibility: number;
 }
 
-interface ForecastData {
-  list: Array<{
-    dt: number;
-    main: { temp: number; temp_min: number; temp_max: number; humidity: number };
-    weather: Array<{ id: number; description: string; icon: string }>;
-    wind: { speed: number; deg: number };
-    pop: number;
-    dt_txt: string;
-  }>;
+interface HourlyData {
+  dt: number;
+  temp: number;
+  dewpoint: number;
+  windSpeed: number;
+  windDeg: number;
+  gust: number;
+  precip: number;
+  snow: number;
+  ptype: number;
+  clouds: number;
+  humidity: number;
+  pressure: number;
+  cape: number;
+  condition: string;
+}
+
+interface DailyData {
+  dt: number;
+  date: string;
+  tempMin: number;
+  tempMax: number;
+  windSpeed: number;
+  windDeg: number;
+  gust: number;
+  precip: number;
+  snow: number;
+  ptype: number;
+  clouds: number;
+  humidity: number;
+  pressure: number;
+  cape: number;
+  condition: string;
+  pop: number;
 }
 
 export default function Home() {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [forecast, setForecast] = useState<ForecastData | null>(null);
+  const [weather, setWeather] = useState<CurrentWeatherData | null>(null);
+  const [hourly, setHourly] = useState<HourlyData[] | null>(null);
+  const [daily, setDaily] = useState<DailyData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastCity, setLastCity] = useState<string>("");
+  const [locationName, setLocationName] = useState<string>("");
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [bgCondition, setBgCondition] = useState<WeatherCondition>("clear");
 
-  const fetchWeather = useCallback(async (cityOrCoords: string | { lat: number; lon: number }) => {
-    setLoading(true);
-    setError(null);
+  const fetchWeather = useCallback(
+    async (cityOrCoords: string | { lat: number; lon: number }) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const weatherParams =
-        typeof cityOrCoords === "string"
-          ? `?q=${encodeURIComponent(cityOrCoords)}`
-          : `?lat=${cityOrCoords.lat}&lon=${cityOrCoords.lon}`;
+      try {
+        let lat: number, lon: number, cityName: string;
 
-      const [weatherRes, forecastRes] = await Promise.all([
-        fetch(`/api/weather${weatherParams}`),
-        fetch(`/api/forecast/daily${weatherParams}`),
-      ]);
+        if (typeof cityOrCoords === "string") {
+          // First geocode the city name
+          const geoRes = await fetch(
+            `/api/geocode?q=${encodeURIComponent(cityOrCoords)}&limit=1`
+          );
+          if (!geoRes.ok) throw new Error("City not found");
+          const geoData = await geoRes.json();
 
-      if (!weatherRes.ok) {
-        const errData = await weatherRes.json();
-        throw new Error(errData.error || "City not found");
+          if (!geoData.results || geoData.results.length === 0) {
+            throw new Error("City not found");
+          }
+
+          const result = geoData.results[0];
+          lat = result.latitude;
+          lon = result.longitude;
+          cityName = `${result.name}, ${result.country || ""}`.trim();
+          setLastCity(cityOrCoords);
+        } else {
+          lat = cityOrCoords.lat;
+          lon = cityOrCoords.lon;
+
+          // Reverse geocode
+          try {
+            const geoRes = await fetch(
+              `/api/geocode?lat=${lat}&lon=${lon}`
+            );
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              cityName = `${geoData.name}, ${geoData.country || ""}`.trim();
+            } else {
+              cityName = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+            }
+          } catch {
+            cityName = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+          }
+          setLastCity(`${lat},${lon}`);
+        }
+
+        setLocationName(cityName);
+        setCoords({ lat, lon });
+
+        // Fetch weather data and daily forecast in parallel
+        const [weatherRes, forecastRes] = await Promise.all([
+          fetch(`/api/weather?lat=${lat}&lon=${lon}`),
+          fetch(`/api/forecast/daily?lat=${lat}&lon=${lon}`),
+        ]);
+
+        if (!weatherRes.ok) {
+          const errData = await weatherRes.json();
+          throw new Error(errData.error || "Weather data unavailable");
+        }
+
+        const weatherData = await weatherRes.json();
+        const current = weatherData.current;
+        setWeather(current);
+        setHourly(weatherData.hourly || []);
+
+        const condition = parseCondition(current.condition);
+        setBgCondition(condition);
+
+        if (forecastRes.ok) {
+          const forecastData = await forecastRes.json();
+          setDaily(forecastData.daily || []);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Something went wrong"
+        );
+      } finally {
+        setLoading(false);
       }
-
-      const weatherData: WeatherData = await weatherRes.json();
-      setWeather(weatherData);
-      setLastCity(weatherData.name);
-
-      const condition = getWeatherCondition(weatherData.weather[0].id);
-      setBgCondition(condition);
-
-      if (forecastRes.ok) {
-        const forecastData: ForecastData = await forecastRes.json();
-        setForecast(forecastData);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   const handleSearch = useCallback(
     (city: string) => fetchWeather(city),
@@ -149,13 +231,14 @@ export default function Home() {
           transition={{ duration: 0.6 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight flex items-center gap-2 justify-center">
+            <Wind className="h-8 w-8 text-white/70" />
             <span className="bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent">
               Aura
             </span>
           </h1>
           <p className="text-sm text-white/40 mt-1">
-            Real-time weather, beautifully presented
+            Real-time weather &amp; live webcams
           </p>
         </motion.div>
 
@@ -178,7 +261,9 @@ export default function Home() {
                 className="flex flex-col items-center justify-center py-20"
               >
                 <Loader2 className="h-10 w-10 text-white/40 animate-spin" />
-                <p className="text-white/40 mt-4 text-sm">Fetching weather...</p>
+                <p className="text-white/40 mt-4 text-sm">
+                  Fetching weather data...
+                </p>
               </motion.div>
             )}
 
@@ -212,31 +297,43 @@ export default function Home() {
                 className="space-y-6"
               >
                 <CurrentWeather
-                  city={`${weather.name}, ${weather.sys.country}`}
-                  temp={weather.main.temp}
-                  feelsLike={weather.main.feels_like}
-                  tempMin={weather.main.temp_min}
-                  tempMax={weather.main.temp_max}
-                  humidity={weather.main.humidity}
-                  pressure={weather.main.pressure}
-                  windSpeed={weather.wind.speed}
-                  windDeg={weather.wind.deg}
+                  city={locationName || "Unknown"}
+                  temp={weather.temp}
+                  feelsLike={weather.feelsLike}
+                  tempMin={weather.tempMin}
+                  tempMax={weather.tempMax}
+                  dewpoint={weather.dewpoint}
+                  humidity={weather.humidity}
+                  pressure={weather.pressure}
+                  windSpeed={weather.windSpeed}
+                  windDeg={weather.windDeg}
+                  gust={weather.gust}
+                  precip={weather.precip}
+                  snow={weather.snow}
+                  clouds={weather.clouds}
+                  condition={weather.condition}
+                  cape={weather.cape}
                   visibility={weather.visibility}
-                  weatherMain={weather.weather[0].main}
-                  weatherDesc={weather.weather[0].description}
                   weatherIcon={getWeatherIcon(
-                    getWeatherCondition(weather.weather[0].id),
+                    parseCondition(weather.condition),
                     night
                   )}
-                  sunrise={weather.sys.sunrise}
-                  sunset={weather.sys.sunset}
                 />
 
-                {forecast && (
-                  <>
-                    <HourlyForecast list={forecast.list} />
-                    <DailyForecast list={forecast.list} />
-                  </>
+                {hourly && hourly.length > 0 && (
+                  <HourlyForecast list={hourly} />
+                )}
+
+                {daily && daily.length > 0 && (
+                  <DailyForecast list={daily} />
+                )}
+
+                {/* Live Webcams */}
+                {coords && (
+                  <LiveWebcams
+                    lat={coords.lat}
+                    lon={coords.lon}
+                  />
                 )}
               </motion.div>
             )}
@@ -251,14 +348,18 @@ export default function Home() {
               >
                 <motion.div
                   animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                   className="text-6xl mb-4"
                 >
                   {getWeatherIcon(bgCondition, night)}
                 </motion.div>
                 <p className="text-white/40 text-sm max-w-xs">
-                  Search for a city or use your location to get started with
-                  real-time weather information
+                  Search for a city or use your location to get real-time
+                  weather, forecasts, and live webcams
                 </p>
               </motion.div>
             )}
@@ -273,9 +374,9 @@ export default function Home() {
           className="mt-auto pt-12 text-center"
         >
           <p className="text-xs text-white/20">
-            Powered by OpenWeather API &bull; Enhanced by{" "}
-            <span className="text-white/30">Aura</span>
-            &bull; Built with Next.js 16
+            Powered by Windy API &bull; Webcams by Windy &bull; Enhanced by{" "}
+            <span className="text-white/30">Aura</span> &bull; Built with
+            Next.js 16
           </p>
         </motion.footer>
       </main>

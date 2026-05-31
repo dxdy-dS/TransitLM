@@ -14,24 +14,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aura Weather — Beautiful Real-Time Weather App",
-  description: "A stunning weather application with real-time data, forecasts, and animated weather effects. Built with Next.js and OpenWeather API.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Aura Weather — Live Weather & Webcam App",
+  description:
+    "A stunning weather application with real-time data from Windy.com, hourly & daily forecasts, live webcams, and animated weather effects. Built with Next.js 16.",
+  keywords: [
+    "weather",
+    "webcam",
+    "forecast",
+    "Windy",
+    "Next.js",
+    "TypeScript",
+    "Tailwind CSS",
+  ],
+  authors: [{ name: "d(x)d(y)" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Aura Weather — Live Weather & Webcam App",
+    description:
+      "Real-time weather forecasts with live webcams powered by Windy.com",
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
   },
 };
 

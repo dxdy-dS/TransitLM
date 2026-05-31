@@ -8,10 +8,17 @@ import {
   Eye,
   Gauge,
   Thermometer,
-  Sunrise,
-  Sunset,
+  Cloud,
+  CloudRain,
+  Zap,
 } from "lucide-react";
-import { formatTemp, getWindDirection, getVisibilityLabel } from "@/lib/weather";
+import {
+  formatTemp,
+  getWindDirection,
+  getVisibilityLabel,
+  getConditionLabel,
+  getCloudCoverLabel,
+} from "@/lib/weather";
 
 interface CurrentWeatherProps {
   city: string;
@@ -19,16 +26,19 @@ interface CurrentWeatherProps {
   feelsLike: number;
   tempMin: number;
   tempMax: number;
+  dewpoint: number;
   humidity: number;
   pressure: number;
   windSpeed: number;
   windDeg: number;
+  gust: number;
+  precip: number;
+  snow: number;
+  clouds: number;
+  condition: string;
+  cape: number;
   visibility: number;
-  weatherMain: string;
-  weatherDesc: string;
   weatherIcon: string;
-  sunrise: number;
-  sunset: number;
 }
 
 export default function CurrentWeather({
@@ -41,31 +51,30 @@ export default function CurrentWeather({
   pressure,
   windSpeed,
   windDeg,
+  gust,
+  precip,
+  clouds,
+  condition,
   visibility,
-  weatherDesc,
   weatherIcon,
-  sunrise,
-  sunset,
+  dewpoint,
+  cape,
+  snow,
 }: CurrentWeatherProps) {
-  const sunriseTime = new Date(sunrise * 1000).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const sunsetTime = new Date(sunset * 1000).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const conditionLabel = getConditionLabel(condition);
 
   const details = [
     {
       icon: <Wind className="h-4 w-4" />,
       label: "Wind",
-      value: `${windSpeed} m/s ${getWindDirection(windDeg)}`,
+      value: `${windSpeed.toFixed(1)} m/s ${getWindDirection(windDeg)}`,
+      sub: gust > 0 ? `Gust ${gust.toFixed(1)}` : undefined,
     },
     {
       icon: <Droplets className="h-4 w-4" />,
       label: "Humidity",
-      value: `${humidity}%`,
+      value: `${Math.round(humidity)}%`,
+      sub: `Dewpt ${formatTemp(dewpoint)}`,
     },
     {
       icon: <Eye className="h-4 w-4" />,
@@ -75,7 +84,7 @@ export default function CurrentWeather({
     {
       icon: <Gauge className="h-4 w-4" />,
       label: "Pressure",
-      value: `${pressure} hPa`,
+      value: `${Math.round(pressure)} hPa`,
     },
     {
       icon: <Thermometer className="h-4 w-4" />,
@@ -83,14 +92,22 @@ export default function CurrentWeather({
       value: formatTemp(feelsLike),
     },
     {
-      icon: <Sunrise className="h-4 w-4" />,
-      label: "Sunrise",
-      value: sunriseTime,
+      icon: <Cloud className="h-4 w-4" />,
+      label: "Clouds",
+      value: `${Math.round(clouds)}%`,
+      sub: getCloudCoverLabel(clouds),
     },
     {
-      icon: <Sunset className="h-4 w-4" />,
-      label: "Sunset",
-      value: sunsetTime,
+      icon: <CloudRain className="h-4 w-4" />,
+      label: "Precipitation",
+      value: `${precip.toFixed(1)} mm`,
+      sub: snow > 0 ? `Snow: ${snow.toFixed(1)} mm` : undefined,
+    },
+    {
+      icon: <Zap className="h-4 w-4" />,
+      label: "CAPE",
+      value: `${Math.round(cape)} J/kg`,
+      sub: cape > 1000 ? "Storm potential" : cape > 500 ? "Moderate" : "Low",
     },
   ];
 
@@ -118,10 +135,8 @@ export default function CurrentWeather({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl font-semibold text-white/90 mb-1">
-            {city}
-          </h2>
-          <p className="text-lg text-white/60 capitalize">{weatherDesc}</p>
+          <h2 className="text-2xl font-semibold text-white/90 mb-1">{city}</h2>
+          <p className="text-lg text-white/60">{conditionLabel}</p>
         </motion.div>
 
         <motion.div
@@ -135,9 +150,9 @@ export default function CurrentWeather({
           </span>
           <div className="flex items-center justify-center gap-3 mt-2 text-white/50 text-sm">
             <span>H: {formatTemp(tempMax)}</span>
-            <span>•</span>
+            <span>&bull;</span>
             <span>L: {formatTemp(tempMin)}</span>
-            <span>•</span>
+            <span>&bull;</span>
             <span>Feels {formatTemp(feelsLike)}</span>
           </div>
         </motion.div>
@@ -152,7 +167,7 @@ export default function CurrentWeather({
                 key={item.label}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.05 }}
+                transition={{ delay: 0.5 + i * 0.04 }}
                 className="flex flex-col items-center p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
               >
                 <span className="text-white/40 mb-1">{item.icon}</span>
@@ -160,6 +175,11 @@ export default function CurrentWeather({
                 <span className="text-sm font-medium text-white/80 text-center">
                   {item.value}
                 </span>
+                {item.sub && (
+                  <span className="text-[10px] text-white/30 mt-0.5">
+                    {item.sub}
+                  </span>
+                )}
               </motion.div>
             ))}
           </div>

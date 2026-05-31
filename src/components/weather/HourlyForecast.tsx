@@ -2,29 +2,50 @@
 
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { getWeatherCondition, getWeatherIcon, formatTemp } from "@/lib/weather";
+import {
+  parseCondition,
+  getWeatherIcon,
+  formatTemp,
+  getConditionLabel,
+  isNightByTime,
+  getWindDirection,
+} from "@/lib/weather";
+
+interface HourlyItem {
+  dt: number;
+  temp: number;
+  dewpoint?: number;
+  windSpeed: number;
+  windDeg: number;
+  gust?: number;
+  precip: number;
+  snow?: number;
+  ptype: number;
+  clouds: number;
+  humidity: number;
+  pressure: number;
+  cape?: number;
+  condition: string;
+}
 
 interface HourlyForecastProps {
-  list: Array<{
-    dt: number;
-    main: { temp: number; temp_min: number; temp_max: number };
-    weather: Array<{ id: number; description: string }>;
-    pop: number;
-  }>;
-  timezoneOffset?: number;
+  list: HourlyItem[];
 }
 
 export default function HourlyForecast({ list }: HourlyForecastProps) {
-  const hourly = list.slice(0, 12).map((item) => {
-    const date = new Date((item.dt as number) * 1000);
-    const condition = getWeatherCondition(item.weather[0].id);
-    const isNight = date.getHours() < 6 || date.getHours() >= 19;
+  const hourly = list.slice(0, 24).map((item) => {
+    const condition = parseCondition(item.condition);
+    const isNight = isNightByTime(item.dt);
+    const date = new Date(item.dt * 1000);
     return {
       time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      temp: Math.round(item.main.temp),
+      temp: Math.round(item.temp),
       icon: getWeatherIcon(condition, isNight),
-      condition: item.weather[0].description,
-      pop: Math.round((item.pop || 0) * 100),
+      condition: getConditionLabel(condition),
+      precip: item.precip,
+      windSpeed: item.windSpeed,
+      windDir: getWindDirection(item.windDeg),
+      clouds: Math.round(item.clouds),
     };
   });
 
@@ -46,19 +67,22 @@ export default function HourlyForecast({ list }: HourlyForecastProps) {
                 key={h.time}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.03 }}
-                className="flex flex-col items-center min-w-[70px] p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors shrink-0"
+                transition={{ delay: 0.4 + i * 0.02 }}
+                className="flex flex-col items-center min-w-[72px] p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors shrink-0"
               >
                 <span className="text-xs text-white/40 mb-2">{h.time}</span>
                 <span className="text-2xl mb-1">{h.icon}</span>
                 <span className="text-sm font-semibold text-white/90">
                   {formatTemp(h.temp)}
                 </span>
-                {h.pop > 0 && (
+                {h.precip > 0 && (
                   <span className="text-[10px] text-blue-300 mt-1">
-                    {h.pop}%
+                    {h.precip.toFixed(1)}mm
                   </span>
                 )}
+                <span className="text-[10px] text-white/25 mt-0.5">
+                  {h.windSpeed.toFixed(0)}m/s {h.windDir}
+                </span>
               </motion.div>
             ))}
           </div>

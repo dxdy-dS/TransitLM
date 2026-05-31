@@ -1,4 +1,5 @@
-// Weather condition utilities
+// Weather condition utilities — supports both OpenWeather IDs and Windy condition strings
+
 export type WeatherCondition =
   | "clear"
   | "clouds"
@@ -25,19 +26,32 @@ export function getWeatherCondition(id: number): WeatherCondition {
   return "clouds";
 }
 
+export function parseCondition(str: string): WeatherCondition {
+  const s = (str || "").toLowerCase().trim();
+  if (s === "thunderstorm") return "thunderstorm";
+  if (s === "snow") return "snow";
+  if (s === "rain") return "rain";
+  if (s === "drizzle") return "drizzle";
+  if (s === "mist" || s === "fog" || s === "haze") return "mist";
+  if (s === "dust") return "dust";
+  if (s === "tornado") return "tornado";
+  if (s === "clouds" || s === "overcast" || s === "cloudy") return "clouds";
+  return "clear";
+}
+
 export function getWeatherIcon(condition: WeatherCondition, isNight = false): string {
   const icons: Record<WeatherCondition, string> = {
-    clear: isNight ? "🌙" : "☀️",
-    clouds: isNight ? "☁️" : "⛅",
-    rain: "🌧️",
-    drizzle: "🌦️",
-    thunderstorm: "⛈️",
-    snow: "❄️",
-    mist: "🌫️",
-    fog: "🌫️",
-    haze: "🌫️",
-    dust: "💨",
-    tornado: "🌪️",
+    clear: isNight ? "\u{1F319}" : "\u2600\uFE0F",
+    clouds: isNight ? "\u2601\uFE0F" : "\u26C5",
+    rain: "\u{1F327}\uFE0F",
+    drizzle: "\u{1F326}\uFE0F",
+    thunderstorm: "\u26C8\uFE0F",
+    snow: "\u2744\uFE0F",
+    mist: "\u{1F32B}\uFE0F",
+    fog: "\u{1F32B}\uFE0F",
+    haze: "\u{1F32B}\uFE0F",
+    dust: "\u{1F4A8}",
+    tornado: "\u{1F32A}\uFE0F",
   };
   return icons[condition];
 }
@@ -93,9 +107,7 @@ export function getBackgroundGradient(
     },
   };
 
-  return isNight
-    ? gradients[condition].night
-    : gradients[condition].day;
+  return isNight ? gradients[condition].night : gradients[condition].day;
 }
 
 export function isNightTime(): boolean {
@@ -103,15 +115,23 @@ export function isNightTime(): boolean {
   return hour < 6 || hour >= 19;
 }
 
+export function isNightByTime(ts: number): boolean {
+  const d = new Date(ts * 1000);
+  const h = d.getHours();
+  return h < 6 || h >= 19;
+}
+
 export function getWindDirection(deg: number): string {
-  const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
-  const index = Math.round(deg / 22.5) % 16;
+  const dirs = [
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+  ];
+  const index = Math.round(((deg % 360 + 360) % 360) / 22.5) % 16;
   return dirs[index];
 }
 
 export function formatTemp(temp: number): string {
-  return `${Math.round(temp)}°`;
+  return `${Math.round(temp)}\u00B0`;
 }
 
 export function getUVLevel(uv: number): { label: string; color: string } {
@@ -126,4 +146,41 @@ export function getVisibilityLabel(m: number): string {
   if (m >= 10000) return `${(m / 1000).toFixed(1)} km`;
   if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
   return `${m} m`;
+}
+
+export function getConditionLabel(condition: string): string {
+  const labels: Record<string, string> = {
+    clear: "Clear Sky",
+    clouds: "Cloudy",
+    rain: "Rain",
+    drizzle: "Light Rain",
+    thunderstorm: "Thunderstorm",
+    snow: "Snow",
+    mist: "Mist",
+    fog: "Fog",
+    haze: "Haze",
+    dust: "Dust",
+    tornado: "Tornado",
+  };
+  return labels[condition] || condition;
+}
+
+export function getCloudCoverLabel(percent: number): string {
+  if (percent <= 10) return "Clear";
+  if (percent <= 30) return "Few Clouds";
+  if (percent <= 60) return "Partly Cloudy";
+  if (percent <= 85) return "Mostly Cloudy";
+  return "Overcast";
+}
+
+export function getPrecipTypeLabel(ptype: number): string {
+  const labels: Record<number, string> = {
+    0: "None",
+    1: "Rain",
+    3: "Freezing Rain",
+    5: "Snow",
+    7: "Mixed",
+    8: "Ice Pellets",
+  };
+  return labels[ptype] || "Unknown";
 }
