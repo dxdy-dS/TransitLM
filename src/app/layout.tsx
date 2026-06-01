@@ -14,26 +14,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TransitLM — Interactive Benchmark Dashboard",
+  title: "JelajahID - Peta Transit Jabodetabek",
   description:
-    "A Large-Scale Dataset and Benchmark for Map-Free Transit Route Generation. Explore evaluation results, funnel visualization, and sample routes.",
+    "Temukan rute perjalanan terbaik di Jabodetabek menggunakan MRT, LRT, KRL, dan TransJakarta. Data real dari jaringan transit Indonesia.",
   keywords: [
-    "TransitLM",
-    "benchmark",
+    "JelajahID",
     "transit",
-    "route generation",
-    "LLM",
-    "evaluation",
-    "dataset",
+    "Jakarta",
+    "MRT",
+    "LRT",
+    "KRL",
+    "TransJakarta",
+    "Jabodetabek",
+    "Indonesia",
   ],
-  authors: [{ name: "TransitLM Team" }],
+  authors: [{ name: "JelajahID" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "TransitLM — Interactive Benchmark Dashboard",
+    title: "JelajahID - Peta Transit Jabodetabek",
     description:
-      "Explore evaluation results for map-free transit route generation by LLMs",
+      "Temukan rute perjalanan terbaik di Jabodetabek menggunakan MRT, LRT, KRL, dan TransJakarta.",
     type: "website",
   },
 };
@@ -44,9 +46,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="id" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[oklch(0.1_0.005_200)] text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
         <Toaster />
