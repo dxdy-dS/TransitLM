@@ -14,28 +14,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cuaca — Prakiraan Cuaca & Webcam Langsung",
+  title: "TransitLM — Interactive Benchmark Dashboard",
   description:
-    "Aplikasi cuaca real-time dengan prakiraan per jam, 7 hari, peta cuaca interaktif, dan webcam langsung. Dibuat dengan Next.js 16 dan Open-Meteo.",
+    "A Large-Scale Dataset and Benchmark for Map-Free Transit Route Generation. Explore evaluation results, funnel visualization, and sample routes.",
   keywords: [
-    "cuaca",
-    "prakiraan",
-    "weather",
-    "forecast",
-    "webcam",
-    "Indonesia",
-    "Open-Meteo",
-    "Windy",
-    "Next.js",
+    "TransitLM",
+    "benchmark",
+    "transit",
+    "route generation",
+    "LLM",
+    "evaluation",
+    "dataset",
   ],
-  authors: [{ name: "d(x)d(y)" }],
+  authors: [{ name: "TransitLM Team" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Cuaca — Prakiraan Cuaca & Webcam Langsung",
+    title: "TransitLM — Interactive Benchmark Dashboard",
     description:
-      "Aplikasi cuaca Indonesia dengan data real-time dari Open-Meteo dan peta interaktif dari Windy.com",
+      "Explore evaluation results for map-free transit route generation by LLMs",
     type: "website",
   },
 };
@@ -46,9 +44,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning className="dark">
+    <html lang="en" suppressHydrationWarning className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[oklch(0.1_0.005_200)] text-white`}
       >
         {children}
         <Toaster />
