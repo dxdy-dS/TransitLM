@@ -8,19 +8,25 @@ import {
 } from "lucide-react";
 import { sampleRoute, lineColors } from "@/lib/benchmark-data";
 
-export default function RouteVisualization() {
+interface RouteVisualizationProps {
+  route?: typeof sampleRoute;
+}
+
+export default function RouteVisualization({ route }: RouteVisualizationProps) {
+  const activeRoute = route || sampleRoute;
+
   // Pre-compute line indices for each station
   const stationLineIndices = useMemo(() => {
     const indices: number[] = [];
     let currentLine = 0;
-    for (const station of sampleRoute.stationSequence) {
+    for (const station of activeRoute.stationSequence) {
       indices.push(currentLine);
       if (station === "【换乘】") {
         currentLine++;
       }
     }
     return indices;
-  }, []);
+  }, [activeRoute]);
 
   return (
     <div className="space-y-6">
@@ -37,21 +43,21 @@ export default function RouteVisualization() {
           <div className="flex-1 min-w-0">
             <p className="text-xs text-emerald-500/70 font-mono">User Query</p>
             <p className="text-sm text-slate-200 mt-1 leading-relaxed">
-              {sampleRoute.query}
+              {activeRoute.query}
             </p>
             <div className="flex items-center gap-4 mt-3 flex-wrap">
               <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
                 <Map className="h-3 w-3" />
-                {sampleRoute.city}
+                {activeRoute.city}
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
                 <Navigation className="h-3 w-3" />
-                [{sampleRoute.start[0].toFixed(4)}, {sampleRoute.start[1].toFixed(4)}]
+                [{activeRoute.start[0].toFixed(4)}, {activeRoute.start[1].toFixed(4)}]
               </span>
               <ArrowRight className="h-3 w-3 text-slate-600" />
               <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
                 <Navigation className="h-3 w-3" />
-                [{sampleRoute.end[0].toFixed(4)}, {sampleRoute.end[1].toFixed(4)}]
+                [{activeRoute.end[0].toFixed(4)}, {activeRoute.end[1].toFixed(4)}]
               </span>
             </div>
           </div>
@@ -61,10 +67,10 @@ export default function RouteVisualization() {
       {/* Route Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { icon: MapPin, label: "Distance", value: sampleRoute.totalDistance, iconClass: "text-emerald-400" },
-          { icon: Clock, label: "Time", value: sampleRoute.totalTime, iconClass: "text-teal-400" },
-          { icon: Banknote, label: "Fare", value: sampleRoute.totalFare, iconClass: "text-cyan-400" },
-          { icon: TrainFront, label: "Lines", value: String(sampleRoute.lineSequence.length), iconClass: "text-emerald-400" },
+          { icon: MapPin, label: "Distance", value: activeRoute.totalDistance, iconClass: "text-emerald-400" },
+          { icon: Clock, label: "Time", value: activeRoute.totalTime, iconClass: "text-teal-400" },
+          { icon: Banknote, label: "Fare", value: activeRoute.totalFare, iconClass: "text-cyan-400" },
+          { icon: TrainFront, label: "Lines", value: String(activeRoute.lineSequence.length), iconClass: "text-emerald-400" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -91,7 +97,7 @@ export default function RouteVisualization() {
 
         {/* Line legends */}
         <div className="flex flex-wrap gap-3 mb-5">
-          {sampleRoute.lineSequence.map((line, i) => (
+          {activeRoute.lineSequence.map((line, i) => (
             <div key={i} className="flex items-center gap-2">
               <div
                 className="w-3 h-3 rounded-full"
@@ -105,10 +111,10 @@ export default function RouteVisualization() {
         {/* Station timeline */}
         <div className="relative max-h-72 overflow-y-auto custom-scrollbar pr-2">
           <div className="space-y-0">
-            {sampleRoute.stationSequence.map((station, i) => {
+            {activeRoute.stationSequence.map((station, i) => {
               const isTransfer = station === "【换乘】";
               const isFirst = i === 0;
-              const isLast = i === sampleRoute.stationSequence.length - 1;
+              const isLast = i === activeRoute.stationSequence.length - 1;
               const lineIdx = stationLineIndices[i];
               const color = lineColors[lineIdx] || "#10b981";
 
@@ -178,7 +184,7 @@ export default function RouteVisualization() {
                         {(isFirst || isLast) && (
                           <span className="text-xs text-slate-500 flex items-center gap-1">
                             <Footprints className="h-3 w-3" />
-                            {isFirst ? sampleRoute.startTransferMode : sampleRoute.endTransferMode}
+                            {isFirst ? activeRoute.startTransferMode : activeRoute.endTransferMode}
                           </span>
                         )}
                       </div>

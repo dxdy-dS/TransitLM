@@ -18,7 +18,7 @@ import BenchmarkCard from "@/components/transit/BenchmarkCard";
 import FunnelVisualization from "@/components/transit/FunnelVisualization";
 import MetricsPanel from "@/components/transit/MetricsPanel";
 import RouteVisualization from "@/components/transit/RouteVisualization";
-import { allBenchmarks } from "@/lib/benchmark-data";
+import { allBenchmarks, sampleRouteIndonesia, benchmark5Indonesia, benchmark6Indonesia, benchmark7Indonesia, benchmark8Indonesia } from "@/lib/benchmark-data";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -34,8 +34,11 @@ const stagger = {
   },
 };
 
+const indonesiaBenchmarks = [benchmark5Indonesia, benchmark6Indonesia, benchmark7Indonesia, benchmark8Indonesia];
+
 export default function Home() {
   const [funnelBenchmark, setFunnelBenchmark] = useState(1);
+  const [indoFunnelBenchmark, setIndoFunnelBenchmark] = useState(5);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -121,7 +124,19 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="mt-4 flex items-center justify-center gap-2">
+            {/* Indonesia badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-4 inline-flex items-center gap-2"
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 text-xs text-amber-400">
+                <span>🇮🇩</span> Indonesia Transit
+              </span>
+            </motion.div>
+
+            <div className="mt-2 flex items-center justify-center gap-2">
               <Scale className="h-3.5 w-3.5 text-slate-600" />
               <span className="text-xs text-slate-600">Apache 2.0 License</span>
             </div>
@@ -280,6 +295,90 @@ export default function Home() {
               className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-4 sm:p-6"
             >
               <MetricsPanel />
+            </motion.div>
+          </div>
+        </section>
+
+        <Separator className="bg-white/5 max-w-5xl mx-auto" />
+
+        {/* ─── Indonesia Transit Integration Section ─── */}
+        <section className="px-4 py-12 sm:py-16" id="indonesia">
+          <div className="max-w-5xl mx-auto">
+            <motion.div {...fadeInUp} className="text-center mb-10">
+              <Badge
+                variant="outline"
+                className="border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs mb-3"
+              >
+                <span className="mr-1">🇮🇩</span> Cross-Border
+              </Badge>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                Indonesia Transit Integration
+              </h2>
+              <p className="text-sm text-slate-400 mt-2 max-w-lg mx-auto">
+                TransitLM benchmark applied to Jakarta's multi-modal transit network
+                (MRT, LRT, KRL, TransJakarta)
+              </p>
+            </motion.div>
+
+            {/* Indonesian Benchmark Cards */}
+            <motion.div
+              variants={stagger}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10"
+            >
+              {indonesiaBenchmarks.map((b, i) => (
+                <BenchmarkCard key={b.id} benchmark={b} index={i} />
+              ))}
+            </motion.div>
+
+            {/* Indonesia Funnel Visualization */}
+            <motion.div {...fadeInUp} className="mb-10">
+              <h3 className="text-lg font-semibold text-white text-center mb-6">
+                Jakarta Evaluation Funnel
+              </h3>
+              <div className="flex justify-center gap-2 mb-8">
+                {[5, 6, 7].map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => setIndoFunnelBenchmark(id)}
+                    className={`rounded-lg px-4 py-2 text-sm transition-all duration-200 ${
+                      indoFunnelBenchmark === id
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : "bg-white/5 text-slate-400 border border-white/10 hover:bg-white/[0.08] hover:text-slate-300"
+                    }`}
+                  >
+                    Benchmark {id}
+                  </button>
+                ))}
+              </div>
+              <motion.div
+                key={indoFunnelBenchmark}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="max-w-2xl mx-auto"
+              >
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-6">
+                  <FunnelVisualization benchmarkId={indoFunnelBenchmark} />
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Indonesia Sample Route Visualization */}
+            <motion.div {...fadeInUp}>
+              <h3 className="text-lg font-semibold text-white text-center mb-6">
+                Jakarta Sample Route
+              </h3>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+              >
+                <RouteVisualization route={sampleRouteIndonesia} />
+              </motion.div>
             </motion.div>
           </div>
         </section>

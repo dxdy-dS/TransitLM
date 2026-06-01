@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getFunnelData, type FunnelStep } from "@/lib/benchmark-data";
+import { getFunnelData, getFunnelDataIndonesia, type FunnelStep } from "@/lib/benchmark-data";
 
 interface FunnelVisualizationProps {
   benchmarkId: number;
@@ -10,15 +10,22 @@ interface FunnelVisualizationProps {
 
 export default function FunnelVisualization({ benchmarkId }: FunnelVisualizationProps) {
   const [activeStep, setActiveStep] = useState<number | null>(null);
-  const data = useMemo(() => getFunnelData(benchmarkId), [benchmarkId]);
+  const data = useMemo(() => {
+    if (benchmarkId >= 5 && benchmarkId <= 7) {
+      return getFunnelDataIndonesia(benchmarkId);
+    }
+    return getFunnelData(benchmarkId);
+  }, [benchmarkId]);
 
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-slate-500 text-sm">
-          Funnel visualization is not available for Benchmark 4.
+          Funnel visualization is not available for this benchmark.
           <br />
-          It requires the remote route-eval API.
+          {benchmarkId === 4 || benchmarkId === 8
+            ? "It requires the remote route-eval API."
+            : "No data available."}
         </p>
       </div>
     );

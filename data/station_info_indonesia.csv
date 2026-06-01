@@ -1,0 +1,92 @@
+stop_id,ad_code,coord_x,coord_y,next_hop_stations,station_name
+id-mrt-001,31,106.7836000,-6.2919000,"[""id-mrt-002""]",Lebak Bulus
+id-mrt-002,31,106.7870000,-6.2793000,"[""id-mrt-001"", ""id-mrt-003""]",Fatmawati
+id-mrt-003,31,106.7905000,-6.2652000,"[""id-mrt-002"", ""id-mrt-004""]",Cipete Raya
+id-mrt-004,31,106.7943000,-6.2543000,"[""id-mrt-003"", ""id-mrt-005""]",Haji Nawi
+id-mrt-005,31,106.7986000,-6.2411000,"[""id-mrt-004"", ""id-mrt-006""]",Blok A
+id-mrt-006,31,106.8015000,-6.2335000,"[""id-bus-001"", ""id-mrt-005"", ""id-mrt-007""]",Blok M
+id-mrt-007,31,106.8059000,-6.2262000,"[""id-mrt-006"", ""id-mrt-008""]",ASEAN
+id-mrt-008,31,106.8098000,-6.2190000,"[""id-mrt-007"", ""id-mrt-009""]",Senayan
+id-mrt-009,31,106.8140000,-6.2156000,"[""id-mrt-008"", ""id-mrt-010""]",Istora Mandiri
+id-mrt-010,31,106.8184000,-6.2080000,"[""id-mrt-009"", ""id-mrt-011""]",Bendungan Hilir
+id-mrt-011,31,106.8227000,-6.2026000,"[""id-mrt-010"", ""id-mrt-012""]",Setiabudi
+id-mrt-012,31,106.8265000,-6.1955000,"[""id-krl-015"", ""id-lrt-007"", ""id-mrt-011"", ""id-mrt-013""]",Dukuh Atas
+id-mrt-013,31,106.8299000,-6.1864000,"[""id-bus-008"", ""id-mrt-012""]",Bundaran HI
+id-lrt-001,31,106.8890000,-6.1653000,"[""id-lrt-002""]",Velodrome
+id-lrt-002,31,106.8800000,-6.1710000,"[""id-lrt-001"", ""id-lrt-003""]",Pulomas
+id-lrt-003,31,106.8700000,-6.1750000,"[""id-lrt-002"", ""id-lrt-004""]",Equestrian
+id-lrt-004,31,106.8600000,-6.1520000,"[""id-lrt-003"", ""id-lrt-005""]",Kelapa Gading
+id-lrt-005,31,106.8520000,-6.1480000,"[""id-lrt-004"", ""id-lrt-006""]",Boulevard Utara
+id-lrt-006,31,106.8440000,-6.1450000,"[""id-lrt-005""]",Boulevard Selatan
+id-lrt-007,31,106.8265000,-6.1948000,"[""id-krl-015"", ""id-lrt-008"", ""id-mrt-012""]",Dukuh Atas
+id-lrt-008,31,106.8300000,-6.1895000,"[""id-lrt-007"", ""id-lrt-009""]",Cikoko
+id-lrt-009,31,106.8335000,-6.1840000,"[""id-lrt-008"", ""id-lrt-010""]",Rasuna Said
+id-lrt-010,31,106.8370000,-6.1790000,"[""id-lrt-009"", ""id-lrt-011""]",Kuningan
+id-lrt-011,31,106.8460000,-6.1740000,"[""id-lrt-010"", ""id-lrt-012""]",Cawang
+id-lrt-012,31,106.8550000,-6.1700000,"[""id-lrt-011"", ""id-lrt-013""]",Halim
+id-lrt-013,31,106.8650000,-6.1650000,"[""id-lrt-012"", ""id-lrt-014""]",Ciracas
+id-lrt-014,31,106.8750000,-6.1600000,"[""id-lrt-013"", ""id-lrt-015""]",Cibubur
+id-lrt-015,31,106.8830000,-6.1550000,"[""id-lrt-014"", ""id-lrt-016""]",Harjamukti
+id-lrt-016,31,106.8920000,-6.1500000,"[""id-lrt-015""]",Cileungsi
+id-krl-001,36,106.7991000,-6.5970000,"[""id-krl-002""]",Bogor
+id-krl-002,36,106.8050000,-6.5700000,"[""id-krl-001"", ""id-krl-003""]",Cilebut
+id-krl-003,36,106.8130000,-6.5500000,"[""id-krl-002"", ""id-krl-004""]",Citayam
+id-krl-004,36,106.8196000,-6.4025000,"[""id-krl-003"", ""id-krl-005""]",Depok
+id-krl-005,36,106.8200000,-6.3900000,"[""id-krl-004"", ""id-krl-006""]",Depok Baru
+id-krl-006,36,106.8260000,-6.3750000,"[""id-krl-005"", ""id-krl-007""]",Pondok Cina
+id-krl-007,36,106.8300000,-6.3600000,"[""id-krl-006"", ""id-krl-008""]",Universitas Indonesia
+id-krl-008,36,106.8330000,-6.3470000,"[""id-krl-007"", ""id-krl-009""]",Universitas Pancasila
+id-krl-009,36,106.8360000,-6.3380000,"[""id-krl-008"", ""id-krl-010""]",Lenteng Agung
+id-krl-010,36,106.8380000,-6.3240000,"[""id-krl-009"", ""id-krl-011""]",Tanjung Barat
+id-krl-011,31,106.8420000,-6.3100000,"[""id-krl-010"", ""id-krl-012""]",Pasar Minggu
+id-krl-012,31,106.8450000,-6.2100000,"[""id-krl-011"", ""id-krl-013"", ""id-krl-030""]",Manggarai
+id-krl-013,31,106.8410000,-6.1990000,"[""id-krl-012"", ""id-krl-014""]",Cikini
+id-krl-014,31,106.8380000,-6.1930000,"[""id-krl-013"", ""id-krl-015""]",Gondangdia
+id-krl-015,31,106.8270000,-6.1860000,"[""id-krl-014"", ""id-krl-016"", ""id-lrt-007"", ""id-mrt-012""]",Sudirman
+id-krl-016,31,106.8220000,-6.1810000,"[""id-krl-015"", ""id-krl-017""]",Karet
+id-krl-017,31,106.8120000,-6.1850000,"[""id-krl-016"", ""id-krl-018""]",Tanah Abang
+id-krl-018,31,106.8030000,-6.1630000,"[""id-krl-017"", ""id-krl-019""]",Duri
+id-krl-019,31,106.8060000,-6.1500000,"[""id-krl-018"", ""id-krl-020""]",Angke
+id-krl-020,31,106.8260000,-6.1350000,"[""id-bus-015"", ""id-krl-019"", ""id-krl-035""]",Jakarta Kota
+id-krl-021,33,107.0020000,-6.2380000,"[""id-krl-022""]",Bekasi
+id-krl-022,33,106.9930000,-6.2350000,"[""id-krl-021"", ""id-krl-023""]",Bekasi Timur
+id-krl-023,33,106.9860000,-6.2320000,"[""id-krl-022"", ""id-krl-024""]",Kranji
+id-krl-024,31,106.9720000,-6.2220000,"[""id-krl-023"", ""id-krl-025""]",Cakung
+id-krl-025,31,106.9600000,-6.2160000,"[""id-krl-024"", ""id-krl-026""]",Klender
+id-krl-026,31,106.9500000,-6.2120000,"[""id-krl-025"", ""id-krl-027""]",Buaran
+id-krl-027,31,106.9400000,-6.2070000,"[""id-krl-026"", ""id-krl-028""]",Rawamangun
+id-krl-028,31,106.9280000,-6.2000000,"[""id-krl-027"", ""id-krl-029""]",Pisangan Baru
+id-krl-029,31,106.8680000,-6.2150000,"[""id-krl-028"", ""id-krl-030""]",Jatinegara
+id-krl-030,31,106.8450000,-6.2100000,"[""id-krl-012"", ""id-krl-029"", ""id-krl-031""]",Manggarai
+id-krl-031,31,106.8500000,-6.1850000,"[""id-krl-030"", ""id-krl-032""]",Senen
+id-krl-032,31,106.8310000,-6.1750000,"[""id-krl-031"", ""id-krl-033""]",Gambir
+id-krl-033,31,106.8330000,-6.1700000,"[""id-krl-032"", ""id-krl-034""]",Juanda
+id-krl-034,31,106.8310000,-6.1630000,"[""id-krl-033"", ""id-krl-035""]",Sawah Besar
+id-krl-035,31,106.8260000,-6.1350000,"[""id-bus-015"", ""id-krl-020"", ""id-krl-034""]",Jakarta Kota
+id-bus-001,31,106.7982000,-6.2430000,"[""id-bus-002"", ""id-mrt-006""]",Halte Blok M
+id-bus-002,31,106.8030000,-6.2370000,"[""id-bus-001"", ""id-bus-003""]",Halte Polda Metro Jaya
+id-bus-003,31,106.8080000,-6.2290000,"[""id-bus-002"", ""id-bus-004""]",Halte Kebayoran
+id-bus-004,31,106.8130000,-6.2220000,"[""id-bus-003"", ""id-bus-005""]",Halte Senayan
+id-bus-005,31,106.8170000,-6.2150000,"[""id-bus-004"", ""id-bus-006""]",Halte Gelora Bung Karno
+id-bus-006,31,106.8210000,-6.2080000,"[""id-bus-005"", ""id-bus-007""]",Halte Semanggi
+id-bus-007,31,106.8240000,-6.1990000,"[""id-bus-006"", ""id-bus-008""]",Halte Monas
+id-bus-008,31,106.8290000,-6.1880000,"[""id-bus-007"", ""id-bus-009"", ""id-mrt-013""]",Halte Bundaran HI
+id-bus-009,31,106.8270000,-6.1850000,"[""id-bus-008"", ""id-bus-010""]",Halte Tosari
+id-bus-010,31,106.8250000,-6.1830000,"[""id-bus-009"", ""id-bus-011""]",Halte Sarinah
+id-bus-011,31,106.8220000,-6.1750000,"[""id-bus-010"", ""id-bus-012"", ""id-bus-024""]",Halte Harmoni
+id-bus-012,31,106.8200000,-6.1670000,"[""id-bus-011"", ""id-bus-013""]",Halte Pecenongan
+id-bus-013,31,106.8210000,-6.1580000,"[""id-bus-012"", ""id-bus-014""]",Halte Gajah Mada
+id-bus-014,31,106.8240000,-6.1480000,"[""id-bus-013"", ""id-bus-015""]",Halte Glodok
+id-bus-015,31,106.8270000,-6.1380000,"[""id-bus-014"", ""id-krl-020"", ""id-krl-035""]",Halte Kota
+id-bus-016,31,106.8820000,-6.1930000,"[""id-bus-017""]",Halte PG Cipto Mangunkusumo
+id-bus-017,31,106.8720000,-6.1910000,"[""id-bus-016"", ""id-bus-018""]",Halte Salemba UI
+id-bus-018,31,106.8620000,-6.1880000,"[""id-bus-017"", ""id-bus-019""]",Halte Salemba
+id-bus-019,31,106.8540000,-6.1860000,"[""id-bus-018"", ""id-bus-020""]",Halte Paseban
+id-bus-020,31,106.8490000,-6.1840000,"[""id-bus-019"", ""id-bus-021""]",Halte Kenari
+id-bus-021,31,106.8460000,-6.1830000,"[""id-bus-020"", ""id-bus-022""]",Halte Kramat
+id-bus-022,31,106.8430000,-6.1810000,"[""id-bus-021"", ""id-bus-023""]",Halte Senen
+id-bus-023,31,106.8380000,-6.1790000,"[""id-bus-022"", ""id-bus-024""]",Halte Kwitang
+id-bus-024,31,106.8220000,-6.1750000,"[""id-bus-011"", ""id-bus-023"", ""id-bus-025""]",Halte Harmoni
+id-bus-025,31,106.8170000,-6.1730000,"[""id-bus-024"", ""id-bus-026""]",Halte Harmoni Central
+id-bus-026,31,106.8240000,-6.1690000,"[""id-bus-025"", ""id-bus-027""]",Halte Juanda
+id-bus-027,31,106.8270000,-6.1580000,"[""id-bus-026""]",Halte Pintu Besar

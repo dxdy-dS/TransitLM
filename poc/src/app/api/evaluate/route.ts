@@ -9,6 +9,10 @@ const SCRIPT_MAP: Record<number, string> = {
   2: "transitlm-review/personalized/evaluate.py",
   3: "transitlm-review/diversity/evaluate.py",
   4: "transitlm-review/general_llm/evaluate.py",
+  5: "transitlm-review/single_route/evaluate.py",
+  6: "transitlm-review/personalized/evaluate.py",
+  7: "transitlm-review/diversity/evaluate.py",
+  8: "transitlm-review/general_llm/evaluate.py",
 };
 
 export async function POST(request: NextRequest) {
@@ -16,9 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { benchmark, inputField } = body;
 
-    if (!benchmark || ![1, 2, 3, 4].includes(Number(benchmark))) {
+    if (!benchmark || ![1, 2, 3, 4, 5, 6, 7, 8].includes(Number(benchmark))) {
       return NextResponse.json(
-        { error: "Invalid benchmark. Must be 1, 2, 3, or 4." },
+        { error: "Invalid benchmark. Must be 1-8." },
         { status: 400 }
       );
     }
@@ -38,8 +42,8 @@ export async function POST(request: NextRequest) {
       args.push("--input_field", inputField);
     }
 
-    // For benchmark 4, we need to provide a default input path
-    if (benchmarkId === 4) {
+    // For benchmark 4 or 8, we need to provide a default input path
+    if (benchmarkId === 4 || benchmarkId === 8) {
       args.push("--input", "transitlm-review/data/general_llm_example.csv");
     }
 

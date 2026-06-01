@@ -122,6 +122,10 @@ def parse_distance(distance_str):
             m = re.search(r'(\d+\.?\d*)\s*米', distance_str)
             if m:
                 return float(m.group(1)) / 1000.0
+        if 'meter' in distance_str.lower():
+            m = re.search(r'(\d+\.?\d*)\s*meter', distance_str, re.IGNORECASE)
+            if m:
+                return float(m.group(1)) / 1000.0
         if '公里' in distance_str or 'km' in distance_str.lower():
             m = re.search(r'(\d+\.?\d*)\s*(公里|km)', distance_str, re.IGNORECASE)
             if m:
@@ -139,12 +143,12 @@ def parse_time(time_str):
         return float(time_str)
     except ValueError:
         time_str = str(time_str)
-        if '小时' in time_str:
-            m = re.search(r'(\d+\.?\d*)\s*小时', time_str)
+        if '小时' in time_str or 'jam' in time_str.lower():
+            m = re.search(r'(\d+\.?\d*)\s*(小时|jam)', time_str, re.IGNORECASE)
             if m:
                 return float(m.group(1)) * 60.0
-        if '分钟' in time_str:
-            m = re.search(r'(\d+\.?\d*)\s*分钟', time_str)
+        if '分钟' in time_str or 'menit' in time_str.lower():
+            m = re.search(r'(\d+\.?\d*)\s*(分钟|menit)', time_str, re.IGNORECASE)
             if m:
                 return float(m.group(1))
         m = re.search(r'(\d+\.?\d*)', time_str)
@@ -182,9 +186,9 @@ def count_transit_lines(line_sequence):
 
 def check_cycling_segments(start_transfer_mode, end_transfer_mode):
     cycling_count = 0
-    if start_transfer_mode and '骑行' in str(start_transfer_mode):
+    if start_transfer_mode and ('骑行' in str(start_transfer_mode) or 'Sepeda' in str(start_transfer_mode)):
         cycling_count += 1
-    if end_transfer_mode and '骑行' in str(end_transfer_mode):
+    if end_transfer_mode and ('骑行' in str(end_transfer_mode) or 'Sepeda' in str(end_transfer_mode)):
         cycling_count += 1
     return cycling_count
 
@@ -327,11 +331,11 @@ def evaluate_sample(sample, input_field, next_hop, station_coordinates, start_co
             first_coords = station_coordinates[first_station]
             geo_dist_start = haversine_distance(start_coords[1], start_coords[0], first_coords[0], first_coords[1])
             start_mode = data.get('start_transfer_mode', '')
-            if '步行' in start_mode or start_mode == '':
+            if '步行' in start_mode or 'Jalan Kaki' in start_mode or start_mode == '':
                 threshold = 3.0
-            elif '骑行' in start_mode:
+            elif '骑行' in start_mode or 'Sepeda' in start_mode:
                 threshold = 5.0
-            elif '打车' in start_mode or '网约车' in start_mode or '滴滴' in start_mode:
+            elif '打车' in start_mode or '网约车' in start_mode or '滴滴' in start_mode or 'Naik Taksi' in start_mode or 'Naik Ojek' in start_mode:
                 threshold = 10.0
             else:
                 threshold = 3.0
@@ -354,11 +358,11 @@ def evaluate_sample(sample, input_field, next_hop, station_coordinates, start_co
             last_coords = station_coordinates[last_station]
             geo_dist_end = haversine_distance(last_coords[0], last_coords[1], end_coords[1], end_coords[0])
             end_mode = data.get('end_transfer_mode', '')
-            if '步行' in end_mode or end_mode == '':
+            if '步行' in end_mode or 'Jalan Kaki' in end_mode or end_mode == '':
                 threshold = 3.0
-            elif '骑行' in end_mode:
+            elif '骑行' in end_mode or 'Sepeda' in end_mode:
                 threshold = 5.0
-            elif '打车' in end_mode or '网约车' in end_mode or '滴滴' in end_mode:
+            elif '打车' in end_mode or '网约车' in end_mode or '滴滴' in end_mode or 'Naik Taksi' in end_mode or 'Naik Ojek' in end_mode:
                 threshold = 10.0
             else:
                 threshold = 3.0
@@ -444,7 +448,7 @@ def has_subway(line_sequence):
     if not line_sequence:
         return False
     for line in line_sequence:
-        if line and ('地铁' in line or '号线' in line):
+        if line and ('地铁' in line or '号线' in line or 'MRT' in line or 'LRT' in line or 'KRL' in line):
             return True
     return False
 

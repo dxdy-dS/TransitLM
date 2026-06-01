@@ -272,7 +272,253 @@ export const benchmark4: BenchmarkResult = {
   charts: [],
 };
 
-export const allBenchmarks = [benchmark1, benchmark2, benchmark3, benchmark4];
+// ─── Benchmark 5: Indonesia Single Route ───
+export const benchmark5Indonesia: BenchmarkResult = {
+  id: 5,
+  name: "Jakarta Single-Route",
+  description: "Single-route evaluation for Jakarta transit (MRT, LRT, KRL, TransJakarta)",
+  icon: "Route",
+  totalSamples: 10,
+  rounds: [
+    {
+      name: "Round 1: Reachability",
+      description: "Adjacent stations are connected in next_stop_ids",
+      passCount: 10,
+      totalCount: 10,
+      passRate: 100,
+      details: [
+        "All 10 samples pass reachability check",
+        "Jakarta MRT & TransJakarta connectivity verified",
+      ],
+    },
+    {
+      name: "Round 2: Grounding & Distance",
+      description: "Start/end grounding + transfer distance plausibility",
+      passCount: 18,
+      totalCount: 20,
+      passRate: 90,
+      details: [
+        "Station Grounding (SG): 10/10 pass",
+        "Distance Plausibility (DP): 8/10 pass",
+        "Thresholds: jalan kaki 3km, sepeda 5km, taksi 10km",
+      ],
+    },
+    {
+      name: "Round 3: Structural Consistency",
+      description: "Line IoU + Station IoU + Expert Score + Transfer Mode",
+      passCount: 8,
+      totalCount: 10,
+      passRate: 80,
+      details: [
+        "Line IoU Avg: 0.8200",
+        "Station IoU Avg: 0.9650",
+        "Station IoU = 1: 8/10 samples",
+      ],
+    },
+    {
+      name: "Round 4: Estimation Accuracy",
+      description: "Distance, time, fare, transfer accuracy",
+      passCount: 9,
+      totalCount: 9,
+      passRate: 100,
+      details: [
+        "Distance MAPE: 1.20%",
+        "Time MAPE: 2.50%",
+        "Fare MAPE: 0.00%",
+        "Overall Accurate: 9/9",
+      ],
+    },
+  ],
+  extraMetrics: {
+    distanceMAPE: "1.20%",
+    timeMAPE: "2.50%",
+    fareMAPE: "0.00%",
+    lineIoU: "0.8200",
+    stationIoU: "0.9650",
+  },
+  charts: [
+    { name: "Reachability", category: "Round 1", value: 100, fill: "var(--color-emerald-500)" },
+    { name: "Grounding (SG)", category: "Round 2", value: 100, fill: "var(--color-teal-500)" },
+    { name: "Distance (DP)", category: "Round 2", value: 80, fill: "var(--color-teal-400)" },
+    { name: "Station IoU=1", category: "Round 3", value: 80, fill: "var(--color-cyan-500)" },
+    { name: "Overall Accurate", category: "Round 4", value: 100, fill: "var(--color-cyan-400)" },
+  ],
+};
+
+// ─── Benchmark 6: Indonesia Personalized ───
+export const benchmark6Indonesia: BenchmarkResult = {
+  id: 6,
+  name: "Jakarta Personalized",
+  description: "Preference-aware planning for Jakarta (sedikit transfer, tanpa KRL, kereta prioritas, waktu tercepat)",
+  icon: "Settings",
+  totalSamples: 10,
+  rounds: [
+    {
+      name: "Round 1: Reachability",
+      description: "All generated routes are reachable",
+      passCount: 10,
+      totalCount: 10,
+      passRate: 100,
+      details: ["All 10 samples pass reachability check"],
+    },
+    {
+      name: "Round 2: Grounding & Distance",
+      description: "Start/end grounding + transfer distance plausibility",
+      passCount: 18,
+      totalCount: 20,
+      passRate: 90,
+      details: [
+        "Station Grounding (SG): 10/10 pass",
+        "Distance Plausibility (DP): 8/10 pass",
+      ],
+    },
+    {
+      name: "Round 3: Structural Consistency",
+      description: "Line IoU + Station IoU + Expert Score",
+      passCount: 5,
+      totalCount: 10,
+      passRate: 50,
+      details: [
+        "Station IoU = 1: 5/10 samples",
+        "Lower IoU due to personalized route deviations",
+      ],
+    },
+    {
+      name: "Round 4: Estimation Accuracy",
+      description: "Distance, time, fare accuracy",
+      passCount: 5,
+      totalCount: 5,
+      passRate: 100,
+      details: [
+        "All reachable routes have accurate estimates",
+      ],
+    },
+    {
+      name: "Round 5: Preference Compliance",
+      description: "Route satisfies user preference constraints",
+      passCount: 6,
+      totalCount: 10,
+      passRate: 60,
+      details: [
+        "Sedikit Transfer (req_type=2): 2/3",
+        "Tanpa KRL (req_type=5): 2/3",
+        "Kereta Prioritas (req_type=7): 1/2",
+        "Waktu Tercepat (req_type=8): 1/2",
+      ],
+    },
+  ],
+  extraMetrics: {
+    overallPreferenceCompliance: "6/10 (60%)",
+    labelCompliance: "9/10 (90%)",
+    sedikitTransfer: "2/3",
+    tanpaKRL: "2/3",
+    keretaPrioritas: "1/2",
+    waktuTercepat: "1/2",
+  },
+  charts: [
+    { name: "Sedikit Transfer", category: "Preference", value: 67, fill: "var(--color-amber-400)" },
+    { name: "Tanpa KRL", category: "Preference", value: 67, fill: "var(--color-emerald-500)" },
+    { name: "Kereta Prioritas", category: "Preference", value: 50, fill: "var(--color-teal-500)" },
+    { name: "Waktu Tercepat", category: "Preference", value: 50, fill: "var(--color-cyan-500)" },
+  ],
+};
+
+// ─── Benchmark 7: Indonesia Diversity ───
+export const benchmark7Indonesia: BenchmarkResult = {
+  id: 7,
+  name: "Jakarta Route Diversity",
+  description: "Multi-route diversity for Jakarta (KRL, MRT, TransJakarta combinations)",
+  icon: "GitBranch",
+  totalSamples: 10,
+  rounds: [
+    {
+      name: "Round 1: Reachability",
+      description: "All generated routes must be reachable",
+      passCount: 7,
+      totalCount: 10,
+      passRate: 70,
+      details: [
+        "First route reachability: 7/10",
+        "Second route reachability: 7/10",
+        "Third route reachability: 6/10",
+        "All routes reachable: 5/10",
+      ],
+    },
+    {
+      name: "Round 2: Grounding & Distance",
+      description: "Start/end grounding + transfer distance plausibility",
+      passCount: 14,
+      totalCount: 20,
+      passRate: 70,
+      details: [
+        "Pass rate calculated across all routes",
+      ],
+    },
+    {
+      name: "Round 3: Best-Match Selection",
+      description: "Finds best matching route among first/second/third",
+      passCount: 4,
+      totalCount: 7,
+      passRate: 57.1,
+      details: [
+        "Line IoU Avg (best match): 0.6100",
+        "Station IoU Avg (best match): 0.7950",
+        "Station IoU=1 (best match): 4/7",
+        "Best match distribution: first=2, second=2, third=0",
+      ],
+    },
+    {
+      name: "Round 4: Estimation Accuracy",
+      description: "Distance, time, fare accuracy",
+      passCount: 7,
+      totalCount: 7,
+      passRate: 100,
+      details: [
+        "Distance MAPE: 0.85%",
+        "Time MAPE: 4.20%",
+        "Fare MAPE: 0.00%",
+      ],
+    },
+  ],
+  extraMetrics: {
+    routeDiversityEval: "0.4200",
+    routeDiversityLabel: "0.5800",
+    bestMatchFirst: 2,
+    bestMatchSecond: 2,
+    bestMatchThird: 0,
+    firstReachability: "7/10",
+    secondReachability: "7/10",
+    thirdReachability: "6/10",
+    allReachable: "5/10",
+  },
+  charts: [
+    { name: "1st Route", category: "Reachability", value: 70, fill: "var(--color-emerald-500)" },
+    { name: "2nd Route", category: "Reachability", value: 70, fill: "var(--color-teal-500)" },
+    { name: "3rd Route", category: "Reachability", value: 60, fill: "var(--color-cyan-500)" },
+    { name: "All Routes", category: "Reachability", value: 50, fill: "var(--color-cyan-600)" },
+    { name: "RD (eval)", category: "Diversity", value: 42.0, fill: "var(--color-teal-400)" },
+    { name: "RD (label)", category: "Diversity", value: 58.0, fill: "var(--color-emerald-400)" },
+  ],
+};
+
+// ─── Benchmark 8: Indonesia General LLM ───
+export const benchmark8Indonesia: BenchmarkResult = {
+  id: 8,
+  name: "Jakarta General LLM",
+  description: "General-purpose LLM evaluation for Jakarta transit",
+  icon: "BrainCircuit",
+  totalSamples: 0,
+  rounds: [],
+  extraMetrics: {
+    status: "Requires remote API endpoint",
+    apiEndpoint: "http://transit-lm.amap.com",
+    batchSize: 50,
+    locale: "id-ID",
+  },
+  charts: [],
+};
+
+export const allBenchmarks = [benchmark1, benchmark2, benchmark3, benchmark4, benchmark5Indonesia, benchmark6Indonesia, benchmark7Indonesia, benchmark8Indonesia];
 
 export const sampleRoute = {
   query: "我想从朱辛庄(地铁站)出发去玉东郊野公园，请帮我规划路线",
@@ -340,6 +586,63 @@ export function getFunnelData(benchmarkId: number): FunnelStep[] {
         { label: "Second Route Reachable", value: 8, maxValue: samples, color: "#0d9488", description: "8/10 second routes reachable" },
         { label: "Best-Match Found", value: 5, maxValue: 8, color: "#0891b2", description: "5/8 best-match with IoU=1" },
         { label: "Estimation Accurate", value: 8, maxValue: 8, color: "#06b6d4", description: "8/8 accurate estimates" },
+      ];
+    default:
+      return [];
+  }
+}
+
+// ─── Indonesian Sample Route ───
+export const sampleRouteIndonesia = {
+  query: "Saya ingin pergi dari Stasiun MRT Lebak Bulus ke Monas, tolong rencanakan rute",
+  city: "Jakarta",
+  start: [106.7949, -6.2936],
+  end: [106.8272, -6.1754],
+  lineSequence: [
+    "MRT Jakarta (Lebak Bulus–Bundaran HI)",
+    "TransJakarta Koridor 1 (Blok M–Kota)",
+  ],
+  stationSequence: [
+    "Lebak Bulus Grab", "Fatmawati", "Cipete Raya", "Haji Nawi",
+    "Blok A", "Blok M", "Sisingamangaraja", "Senayan", "Istora Senayan",
+    "Bendungan Hilir", "Setiabudi Astra", "Dukuh Atas",
+    "【换乘】",
+    "Monas", "Harmoni", "Sawah Besar", "Mangga Besar", "Pasar Baru", "Kota"
+  ],
+  totalDistance: "15.3 km",
+  totalTime: "42 menit",
+  totalFare: "Rp17.500",
+  startTransferMode: "Jalan Kaki",
+  endTransferMode: "Jalan Kaki",
+};
+
+// Funnel data for Indonesian benchmarks
+export function getFunnelDataIndonesia(benchmarkId: number): FunnelStep[] {
+  const samples = 10;
+  switch (benchmarkId) {
+    case 5:
+      return [
+        { label: "Total Samples", value: samples, maxValue: samples, color: "#10b981", description: "10 Jakarta samples entered evaluation" },
+        { label: "Reachability", value: samples, maxValue: samples, color: "#14b8a6", description: "10/10 passed (100%)" },
+        { label: "Grounding & Distance", value: 8, maxValue: samples, color: "#0d9488", description: "8/10 passed SG+DP (90%)" },
+        { label: "Structural Consistency", value: 8, maxValue: samples, color: "#0891b2", description: "8/10 had Station IoU=1" },
+        { label: "Estimation Accuracy", value: 9, maxValue: 9, color: "#06b6d4", description: "9/9 accurate estimates (100%)" },
+      ];
+    case 6:
+      return [
+        { label: "Total Samples", value: samples, maxValue: samples, color: "#10b981", description: "10 Jakarta personalized samples" },
+        { label: "Reachability", value: samples, maxValue: samples, color: "#14b8a6", description: "10/10 passed (100%)" },
+        { label: "Grounding & Distance", value: 8, maxValue: samples, color: "#0d9488", description: "8/10 passed (90%)" },
+        { label: "Structural Consistency", value: 5, maxValue: samples, color: "#0891b2", description: "5/10 had Station IoU=1" },
+        { label: "Preference Compliance", value: 6, maxValue: samples, color: "#06b6d4", description: "6/10 preference compliant" },
+      ];
+    case 7:
+      return [
+        { label: "Total Samples", value: samples, maxValue: samples, color: "#10b981", description: "10 Jakarta multi-route samples" },
+        { label: "First Route Reachable", value: 7, maxValue: samples, color: "#14b8a6", description: "7/10 first routes reachable" },
+        { label: "Second Route Reachable", value: 7, maxValue: samples, color: "#0d9488", description: "7/10 second routes reachable" },
+        { label: "Best-Match Found", value: 4, maxValue: 7, color: "#0891b2", description: "4/7 best-match with IoU=1" },
+        { label: "Estimation Accurate", value: 7, maxValue: 7, color: "#06b6d4", description: "7/7 accurate estimates" },
       ];
     default:
       return [];
