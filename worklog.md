@@ -18,3 +18,21 @@ Stage Summary:
 - Build error fixed and pushed to dxdy-dS/TransitLM main branch
 - POC is a Next.js 16 interactive benchmark dashboard for the TransitLM paper
 - All static pages generated successfully
+---
+Task ID: 2
+Agent: main
+Task: Integrate Indonesia (Jakarta) transit data into TransitLM
+
+Work Log:
+- Generated station_info_indonesia.csv with 91 stations across 7 Jakarta transit lines
+- Created 3 benchmark CSVs with 30 total Indonesian samples
+- Updated common.py with Indonesian locale support (meter, menit, jam, MRT, LRT, KRL)
+- Created indonesia/evaluate.py wrapper for Indonesian evaluation
+- Updated POC dashboard with Indonesia benchmark cards, funnel viz, route visualization
+- Fixed git history (removed node_modules from tracking)
+- Pushed all changes to GitHub (force push after history rewrite)
+
+Stage Summary:
+- Evaluation results: Reachability 100%, SG 100%, DP 60%, Station IoU=1 100%, Accuracy 100%
+- POC dashboard builds successfully with Indonesian section
+- All pushed to dxdy-dS/TransitLM main branch
